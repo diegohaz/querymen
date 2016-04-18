@@ -4,7 +4,6 @@ export default class MenqueryParam {
 
   constructor (name, value, options) {
     this._validators = []
-    this._value = value
     this.name = name
     this.options = _.assign({
       type: String,
@@ -164,6 +163,8 @@ export default class MenqueryParam {
 
     if (_.isNil(value)) {
       return query
+    } else if (value !== this._value) {
+      value = this.value(value)
     }
 
     if (_.isArray(path) && path.length > 1) {
@@ -173,8 +174,10 @@ export default class MenqueryParam {
       path = path[0]
     }
 
-    if (_.isArray(value) && options.operator !== '$in' && options.operator !== '$nin') {
+    if (_.isArray(value) && options.operator === '$eq') {
       options.operator = '$in'
+    } else if (_.isArray(value) && options.operator === '$ne') {
+      options.operator = '$nin'
     }
 
     if (options.operator === '$eq' || _.isRegExp(value) && options.operator !== '$in') {
@@ -195,6 +198,10 @@ export default class MenqueryParam {
       return options.get(this._value)
     }
 
+    if (!get && this._value === value) {
+      return this._value
+    }
+
     if (options.multiple && _.isString(value) && value.search(options.separator) !== -1) {
       let values = value.split(options.separator).map((v) => options.set(this.value(v)))
       this._value = values
@@ -208,7 +215,13 @@ export default class MenqueryParam {
     })
 
     if (!_.isNil(value)) {
-      value = options.regex ? new RegExp(value, 'i') : options.type(value)
+      if (options.regex) {
+        value = new RegExp(value, 'i')
+      } else if (options.type.name === 'Date') {
+        value = new Date(value)
+      } else {
+        value = options.type(value)
+      }
       this._value = options.set(value)
     }
 
