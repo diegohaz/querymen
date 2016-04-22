@@ -1,5 +1,4 @@
 import test from 'tape'
-import _ from 'lodash'
 import {MenquerySchema, MenqueryParam} from '../src/'
 
 let schema = (params, options) => new MenquerySchema(params, options)
@@ -165,7 +164,7 @@ test('MenquerySchema validate', (t) => {
     'should validate no options with success')
 
   t.equal(
-    schema().validate((err) => false),
+    schema().validate((err) => !!err),
     false,
     'should return callback return')
 

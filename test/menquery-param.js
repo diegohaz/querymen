@@ -157,7 +157,7 @@ test('MenqueryParam validation', (t) => {
     'should validate no options with success')
 
   t.equal(
-    param().validate((err) => false),
+    param().validate((err) => !!err),
     false,
     'should return callback return')
 
