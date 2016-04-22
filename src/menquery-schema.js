@@ -130,7 +130,7 @@ export default class MenquerySchema {
       } else if (param.name === 'page') {
         query[bind].skip = this.params.limit.value() * (value - 1)
       } else {
-        query[bind] = param.parse()
+        query[bind] = _.assign(query[bind], param.parse())
       }
     })
 
