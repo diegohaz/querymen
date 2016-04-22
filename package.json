@@ -1,6 +1,6 @@
 {
   "name": "menquery",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Querystring parser middleware for MongoDB, Express and Nodejs",
   "main": "dist/index.js",
   "files": [
@@ -57,8 +57,10 @@
     "eslint-config-standard": "^5.1.0",
     "eslint-plugin-promise": "^1.1.0",
     "eslint-plugin-standard": "^1.3.2",
+    "express": "^4.13.4",
     "isparta": "*",
     "rimraf": "*",
+    "supertest": "^1.2.0",
     "tap-spec": "*",
     "tape": "*",
     "watch": "*"

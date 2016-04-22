@@ -95,6 +95,7 @@ limit: {
 sort: {
   type: String,
   default: 'name',
+  multiple: true,
   bindTo: 'options'
 }
 ```

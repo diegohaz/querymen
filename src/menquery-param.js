@@ -9,7 +9,7 @@ export default class MenqueryParam {
       type: String,
       paths: [name],
       bindTo: 'filter',
-      multiple: true,
+      multiple: false,
       separator: ',',
       minlength: false,
       maxlength: false,
@@ -24,8 +24,8 @@ export default class MenqueryParam {
       max: false,
       trim: true,
       operator: '$eq',
-      set: (value) => value,
-      get: (value) => value
+      set: (value, param) => value,
+      get: (value, param) => value
     }, options)
 
     this.value(value)
@@ -33,7 +33,7 @@ export default class MenqueryParam {
 
   default (value, defaultValue) {
     if (_.isNil(value) || _.isNaN(value) || value === '') {
-      return _.isFunction(defaultValue) ? defaultValue(value, this.options) : defaultValue
+      return _.isFunction(defaultValue) ? defaultValue(this) : defaultValue
     }
     return value
   }
@@ -157,7 +157,7 @@ export default class MenqueryParam {
     return value
   }
 
-  parse (path = this.options.paths, value = this._value) {
+  parse (value = this._value, path = this.options.paths) {
     let options = this.options
     let query = {}
 
@@ -168,7 +168,7 @@ export default class MenqueryParam {
     }
 
     if (_.isArray(path) && path.length > 1) {
-      query.$or = path.map((p) => this.parse(p, value))
+      query.$or = path.map((p) => this.parse(value, p))
       return query
     } else if (_.isArray(path)) {
       path = path[0]
@@ -195,7 +195,11 @@ export default class MenqueryParam {
     let get = _.isNil(value)
 
     if (get && this._value) {
-      return options.get(this._value)
+      if (_.isArray(this._value)) {
+        return this._value.map((v) => options.get(v))
+      } else {
+        return options.get(this._value, this)
+      }
     }
 
     if (!get && this._value === value) {
@@ -203,7 +207,7 @@ export default class MenqueryParam {
     }
 
     if (options.multiple && _.isString(value) && value.search(options.separator) !== -1) {
-      let values = value.split(options.separator).map((v) => options.set(this.value(v)))
+      let values = value.split(options.separator).map((v) => this.value(v))
       this._value = values
       return values
     }
@@ -222,7 +226,7 @@ export default class MenqueryParam {
       } else {
         value = options.type(value)
       }
-      this._value = options.set(value)
+      this._value = options.set(value, this)
     }
 
     return this._value

@@ -17,7 +17,6 @@ export default class MenquerySchema {
       page: {
         type: Number,
         default: 1,
-        multiple: false,
         max: 30,
         min: 1,
         bindTo: 'options'
@@ -25,7 +24,6 @@ export default class MenquerySchema {
       limit: {
         type: Number,
         default: 30,
-        multiple: false,
         max: 100,
         min: 1,
         bindTo: 'options'
@@ -33,6 +31,7 @@ export default class MenquerySchema {
       sort: {
         type: String,
         default: 'name',
+        multiple: true,
         bindTo: 'options'
       }
     }
@@ -40,62 +39,66 @@ export default class MenquerySchema {
     this.addAll(params)
   }
 
-  get (param) {
-    return this.params[this._getSchemaParamName(param)]
+  get (paramName) {
+    return this.params[this._getSchemaParamName(paramName)]
   }
 
-  set (param, value, properties = {}) {
-    param = this._getSchemaParamName(param)
+  set (paramName, value, properties = {}) {
+    paramName = this._getSchemaParamName(paramName)
 
-    if (!this.params[param]) {
-      this.add(param, value, properties)
+    if (!this.params[paramName]) {
+      this.add(paramName, value, properties)
     } else {
-      this.params[param].value(value)
+      this.params[paramName].value(value)
     }
 
-    return this.params[param]
+    return this.params[paramName]
   }
 
-  add (param, value, properties = {}) {
-    if (param instanceof MenqueryParam) {
-      this.params[param.name] = param
-      return param
+  add (paramName, value, properties = {}) {
+    if (paramName instanceof MenqueryParam) {
+      this.params[paramName.name] = paramName
+      return paramName
     }
 
-    param = this._getSchemaParamName(param)
-    properties = _.clone(properties)
+    paramName = this._getSchemaParamName(paramName)
 
     if (_.isString(properties)) {
       properties = {default: properties}
+    } else if (_.isNumber(properties)) {
+      properties = {type: Number, default: properties}
+    } else if (_.isDate(properties)) {
+      properties = {type: Date, default: properties}
     } else if (_.isFunction(properties)) {
       properties = {type: properties}
     }
 
-    if (this.options[param] === false) {
+    if (this.options[paramName] === false) {
       return false
     }
 
-    properties = _.assign(this._params[param], properties)
-    this.params[param] = new MenqueryParam(param, value, properties)
+    properties = _.assign(this._params[paramName], properties)
+    this.params[paramName] = new MenqueryParam(paramName, value, properties)
 
-    return this.params[param]
+    return this.params[paramName]
   }
 
   addAll (params) {
-    let keys = _.union(_.keys(this._params), _.keys(params))
+    let paramsKeys = _.keys(params)
+    let keys = _.union(_.keys(this._params), paramsKeys)
 
-    keys.forEach((param) => {
-      this.add(param, null, params[param])
+    keys.forEach((paramName) => {
+      this.add(paramName, null, params[paramName])
     })
 
     return this.params
   }
 
-  remove (param) {
-    delete this.params[param]
+  remove (paramName) {
+    delete this.params[paramName]
   }
 
-  parse (values) {
+  parse (values = {}) {
     let query = {}
 
     _.forIn(this.params, (param) => {
@@ -107,7 +110,7 @@ export default class MenquerySchema {
       let value = param.value()
       let bind = param.options.bindTo
 
-      query[bind] = {}
+      query[bind] = query[bind] || {}
 
       if (param.name === 'sort') {
         let fields = _.isArray(value) ? value : [value]
@@ -125,7 +128,7 @@ export default class MenquerySchema {
       } else if (param.name === 'limit') {
         query[bind].limit = value
       } else if (param.name === 'page') {
-        query[bind].skip = this.params.limit.value * (value - 1)
+        query[bind].skip = this.params.limit.value() * (value - 1)
       } else {
         query[bind] = param.parse()
       }
@@ -134,8 +137,13 @@ export default class MenquerySchema {
     return query
   }
 
-  validate (values, next = () => {}) {
-    let error = false
+  validate (values = {}, next = (error) => !error) {
+    let error
+
+    if (_.isFunction(values)) {
+      next = values
+      values = {}
+    }
 
     _.forIn(this.params, (param) => {
       let value = values[this._getQueryParamName(param.name)]
@@ -151,12 +159,12 @@ export default class MenquerySchema {
     return next(error)
   }
 
-  _getSchemaParamName (param) {
-    return _.findKey(this.options, (option) => option === param) || param
+  _getSchemaParamName (paramName) {
+    return _.findKey(this.options, (option) => option === paramName) || paramName
   }
 
-  _getQueryParamName (param) {
-    return _.find(this.options, param) || param
+  _getQueryParamName (paramName) {
+    return this.options[paramName] || paramName
   }
 
 }
