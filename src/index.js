@@ -12,6 +12,7 @@ export default function menquery (schema, options) {
 
     _schema.validate(req.query, (err) => {
       if (err) {
+        res.status(400)
         return next(err)
       }
 

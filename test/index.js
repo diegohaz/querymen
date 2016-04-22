@@ -10,7 +10,7 @@ let app = express()
 
 app.get('/posts', menquery(), (err, req, res, next) => {
   if (err) {
-    return res.status(400).json(err)
+    return res.json(err)
   }
   next()
 }, (req, res) => {
