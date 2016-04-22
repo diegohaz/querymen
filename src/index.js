@@ -5,11 +5,13 @@ import MenquerySchema from './menquery-schema'
 export {MenqueryParam, MenquerySchema}
 
 export default function menquery (schema, options) {
-  if (schema instanceof MenquerySchema === false) {
-    schema = new MenquerySchema(schema, options)
-  }
-
   return function (req, res, next) {
+    if (schema instanceof MenquerySchema === false) {
+      var schema = new MenquerySchema(schema, options)
+    } else {
+      var schema = _.clone(schema)
+    }
+
     schema.validate(req.query, (err) => {
       if (err) {
         return next(err)
