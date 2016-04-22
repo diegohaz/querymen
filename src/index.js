@@ -6,18 +6,16 @@ export {MenqueryParam, MenquerySchema}
 
 export default function menquery (schema, options) {
   return function (req, res, next) {
-    if (schema instanceof MenquerySchema === false) {
-      var schema = new MenquerySchema(schema, options)
-    } else {
-      var schema = _.clone(schema)
-    }
+    let _schema = schema instanceof MenquerySchema
+                ? _.clone(schema)
+                : new MenquerySchema(schema, options)
 
-    schema.validate(req.query, (err) => {
+    _schema.validate(req.query, (err) => {
       if (err) {
         return next(err)
       }
 
-      req = _.merge(req, schema.parse())
+      req = _.merge(req, _schema.parse())
       next()
     })
   }
