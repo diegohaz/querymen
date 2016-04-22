@@ -69,12 +69,12 @@ export default class MenqueryParam {
   required (value, required) {
     if (required) {
       let validate = (value) => !_.isNil(value) && !_.isNaN(value) && value !== ''
-      this._validators.unshift({
+      this.addValidator({
         validate: validate,
         name: 'required',
         required: required,
         error: `${this.name} is required`
-      })
+      }, 0)
     }
     return value
   }
@@ -82,7 +82,7 @@ export default class MenqueryParam {
   min (value, min) {
     if (_.isNumber(min)) {
       let validate = (value) => _.isNil(value) || value >= min
-      this._validators.push({
+      this.addValidator({
         validate: validate,
         name: 'min',
         min: min,
@@ -95,7 +95,7 @@ export default class MenqueryParam {
   max (value, max) {
     if (_.isNumber(max)) {
       let validate = (value) => _.isNil(value) || value <= max
-      this._validators.push({
+      this.addValidator({
         validate: validate,
         name: 'max',
         max: max,
@@ -108,7 +108,7 @@ export default class MenqueryParam {
   minlength (value, minlength) {
     if (_.isNumber(minlength)) {
       let validate = (value) => _.isNil(value) || value.length >= minlength
-      this._validators.push({
+      this.addValidator({
         validate: validate,
         name: 'minlength',
         minlength: minlength,
@@ -121,7 +121,7 @@ export default class MenqueryParam {
   maxlength (value, maxlength) {
     if (_.isNumber(maxlength)) {
       let validate = (value) => _.isNil(value) || value.length <= maxlength
-      this._validators.push({
+      this.addValidator({
         validate: validate,
         name: 'maxlength',
         maxlength: maxlength,
@@ -134,7 +134,7 @@ export default class MenqueryParam {
   enum (value, _enum) {
     if (_.isArray(_enum)) {
       let validate = (value) => _.isNil(value) || _enum.indexOf(value) !== -1
-      this._validators.push({
+      this.addValidator({
         validate: validate,
         name: 'enum',
         enum: _enum,
@@ -147,7 +147,7 @@ export default class MenqueryParam {
   match (value, match) {
     if (_.isRegExp(match)) {
       let validate = (value) => _.isNil(value) || match.test(value)
-      this._validators.push({
+      this.addValidator({
         validate: validate,
         name: 'match',
         match: match,
@@ -155,6 +155,11 @@ export default class MenqueryParam {
       })
     }
     return value
+  }
+
+  addValidator (validator, at = this._validators.length) {
+    _.remove(this._validators, {name: validator.name})
+    this._validators.splice(at, 0, validator)
   }
 
   parse (value = this._value, path = this.options.paths) {
@@ -190,11 +195,10 @@ export default class MenqueryParam {
     return query
   }
 
-  value (value) {
+  value (value, set = !_.isNil(value)) {
     let options = this.options
-    let get = _.isNil(value)
 
-    if (get && this._value) {
+    if (!set && this._value) {
       if (_.isArray(this._value)) {
         return this._value.map((v) => options.get(v))
       } else {
@@ -202,7 +206,7 @@ export default class MenqueryParam {
       }
     }
 
-    if (!get && this._value === value) {
+    if (set && this._value === value) {
       return this._value
     }
 

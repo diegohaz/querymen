@@ -147,7 +147,7 @@ export default class MenquerySchema {
 
     _.forIn(this.params, (param) => {
       let value = values[this._getQueryParamName(param.name)]
-      param.value(value)
+      param.value(value, true)
     })
 
     for (let i in this.params) {

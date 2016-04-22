@@ -6,23 +6,19 @@ import menquery from '../src'
 import './menquery-param'
 import './menquery-schema'
 
-let route = (middleware = menquery()) => {
-  let app = express()
+let app = express()
 
-  app.get('/posts', middleware, (err, req, res, next) => {
-    if (err) {
-      return res.status(400).json(err)
-    }
-    next()
-  }, (req, res) => {
-    res.status(200).json(_.pick(req, ['filter', 'options', 'test']))
-  })
-
-  return app
-}
+app.get('/posts', menquery(), (err, req, res, next) => {
+  if (err) {
+    return res.status(400).json(err)
+  }
+  next()
+}, (req, res) => {
+  res.status(200).json(_.pick(req, ['filter', 'options', 'test']))
+})
 
 test('Menquery middleware', (t) => {
-  request(route())
+  request(app)
     .get('/posts')
     .query({q: 'test'})
     .expect(200)
@@ -31,13 +27,22 @@ test('Menquery middleware', (t) => {
       t.deepEqual(res.body.filter._q, /test/i, 'should respond with parsed data')
     })
 
-  request(route())
+  request(app)
     .get('/posts')
     .query({page: 50})
     .expect(400)
     .end((err, res) => {
       if (err) throw err
       t.equal(res.body.param, 'page', 'should respond with error')
+    })
+
+  request(app)
+    .get('/posts')
+    .query({limit: 20})
+    .expect(200)
+    .end((err, res) => {
+      if (err) throw err
+      t.equal(res.body.options.limit, 20, 'should respond with limit')
     })
 
   t.end()
