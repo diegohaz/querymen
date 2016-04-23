@@ -1,38 +1,5 @@
 import _ from 'lodash'
 
-/**
- * Validator object.
- * @typedef {Object} Validator
- * @property {boolean} valid - Indicates if the value is valid or not.
- * @property {string} message - The error message.
- * @property {string} [param] - The name of the param.
- * @property {*} [value] - The value of the param.
- */
-/**
- * Param parser callback.
- * @callback parserFn
- * @param {*} parserValue - The value passed to the parser.
- * @param {*} paramValue - The value passed to the param.
- * @param {MenqueryParam} param - The `MenqueryParam` object.
- * @return {*} The parsed value
- */
-/**
- * Param formatter callback.
- * @callback formatterFn
- * @param {*} formatterValue - The value passed to the formatter.
- * @param {*} paramValue - The value passed to the param.
- * @param {MenqueryParam} param - The `MenqueryParam` object.
- * @return {*} The formatted value
- */
-/**
- * Param validator callback.
- * @callback validatorFn
- * @param {*} validatorValue - The value passed to the validator.
- * @param {*} paramValue - The value passed to the param.
- * @param {MenqueryParam} param - The `MenqueryParam` object.
- * @return {Validator}
- */
-
 export default class MenqueryParam {
 
   /**
@@ -43,9 +10,11 @@ export default class MenqueryParam {
    */
   constructor (name, value, options) {
     this.name = name
-    this.validators = {}
-    this.parsers = {}
-    this.formatters = {}
+    this.handlers = {
+      parsers: {},
+      formatters: {},
+      validators: {}
+    }
     this.options = _.assign({
       type: String,
       paths: [name],
@@ -144,6 +113,21 @@ export default class MenqueryParam {
 
     return this.options[name]
   }
+
+  /**
+   * Get or set a handler.
+   * @param {string} type - Handler type.
+   * @param {string} name - Handler name.
+   * @param {Function} fn - Set the handler method.
+   */
+  handler (type, name, fn) {
+    if (arguments.length > 2) {
+      this.handlers[type][name] = fn
+    }
+
+    return this.handlers[type][name]
+  }
+
   /**
    * Get or set a parser.
    * @param {string} name - Parser name.
@@ -151,25 +135,7 @@ export default class MenqueryParam {
    * @return {parserFn} The parser method.
    */
   parser (name, fn) {
-    if (arguments.length > 1) {
-      this.parsers[name] = fn
-    }
-
-    return this.parsers[name]
-  }
-
-  /**
-   * Get or set a validator.
-   * @param {string} name - Validator name.
-   * @param {validatorFn} fn - Set the validator method.
-   * @return {validatorFn} The validator method.
-   */
-  validator (name, fn) {
-    if (arguments.length > 1) {
-      this.validators[name] = fn
-    }
-
-    return this.validators[name]
+    return this.handler('parsers', ...arguments)
   }
 
   /**
@@ -179,11 +145,17 @@ export default class MenqueryParam {
    * @return {formatterFn} The formatter method.
    */
   formatter (name, fn) {
-    if (arguments.length > 1) {
-      this.formatters[name] = fn
-    }
+    return this.handler('formatters', ...arguments)
+  }
 
-    return this.formatters[name]
+  /**
+   * Get or set a validator.
+   * @param {string} name - Validator name.
+   * @param {validatorFn} fn - Set the validator method.
+   * @return {validatorFn} The validator method.
+   */
+  validator (name, fn) {
+    return this.handler('validators', ...arguments)
   }
 
   /**
@@ -216,11 +188,12 @@ export default class MenqueryParam {
     }
 
     _.forIn(this.options, (optionValue, option) => {
-      if (_.isFunction(this.parsers[option])) {
+      let parser = this.handlers.parsers[option]
+      if (_.isFunction(parser)) {
         if (_.isArray(value)) {
-          value = value.map((v) => this.parsers[option](optionValue, v))
+          value = value.map((v) => parser(optionValue, v))
         } else {
-          value = this.parsers[option](optionValue, value)
+          value = parser(optionValue, value)
         }
       }
     })
@@ -242,9 +215,8 @@ export default class MenqueryParam {
    */
   value (value, bind = true) {
     let options = this.options
-    let set = arguments.length
 
-    if (!set) {
+    if (arguments.length === 0) {
       if (_.isArray(this._value)) {
         return this._value.map((v) => options.get(v))
       } else {
@@ -271,8 +243,9 @@ export default class MenqueryParam {
     }
 
     _.forIn(this.options, (optionValue, option) => {
-      if (_.isFunction(this.formatters[option])) {
-        value = this.formatters[option](optionValue, value)
+      let formatter = this.handlers.formatters[option]
+      if (_.isFunction(formatter)) {
+        value = formatter(optionValue, value)
       }
     })
 
@@ -319,10 +292,11 @@ export default class MenqueryParam {
     }
 
     for (let option in this.options) {
+      let validator = this.handlers.validators[option]
       if (error) break
-      if (!_.isFunction(this.validators[option])) continue
+      if (!_.isFunction(validator)) continue
       let optionValue = this.options[option]
-      let validation = this.validators[option](optionValue, value, this)
+      let validation = validator(optionValue, value, this)
 
       if (!validation.valid) {
         error = _.assign({

@@ -428,7 +428,7 @@ test('MenqueryParam parse $or', (t) => {
   t.end()
 })
 
-test('MenqueryParam options', (t) => {
+test('MenqueryParam option', (t) => {
   t.ok(
     param().option('paths'),
     'should get option')
@@ -440,7 +440,7 @@ test('MenqueryParam options', (t) => {
   t.end()
 })
 
-test('MenqueryParam formatters', (t) => {
+test('MenqueryParam formatter', (t) => {
   let formatterParam = param()
   formatterParam.formatter('capitalize', (capitalize, value, param) => {
     return capitalize ? _.capitalize(value) : value
@@ -471,7 +471,7 @@ test('MenqueryParam formatters', (t) => {
   t.end()
 })
 
-test('MenqueryParam parsers', (t) => {
+test('MenqueryParam parser', (t) => {
   let parserParam = param()
   parserParam.parser('makeLowercase', parserParam.formatter('lowercase'))
 
@@ -507,7 +507,7 @@ test('MenqueryParam parsers', (t) => {
   t.end()
 })
 
-test('MenqueryParam validators', (t) => {
+test('MenqueryParam validator', (t) => {
   let validatorParam = param()
   validatorParam.validator('isPlural', (isPlural, value, param) => ({
     valid: !isPlural || value.substr(-1) === 's'

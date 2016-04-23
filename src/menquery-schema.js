@@ -3,10 +3,14 @@ import MenqueryParam from './menquery-param'
 
 export default class MenquerySchema {
 
-  // constructor
   constructor (params = {}, options = {}) {
     this.options = options
     this.params = {}
+    this.handlers = {
+      parsers: {},
+      formatters: {},
+      validators: {}
+    }
     this._params = {
       q: {
         type: RegExp,
@@ -35,54 +39,166 @@ export default class MenquerySchema {
       }
     }
 
-    this.param(params)
+    let keys = _.union(_.keys(this._params), _.keys(params))
+
+    keys.forEach((key) => this.add(key, null, params[key]))
   }
-  // change to options
-  // must add options if it is passed
-  param (name, value, properties, set = !_.isNil(value) || !_.isNil(properties)) {
+
+  /**
+   * Get or set an option.
+   * @param {string} name - Option name.
+   * @param {*} [value] - Set the value of the option.
+   * @return {*} Value of the option.
+   */
+  option (name, value) {
+    if (arguments.length > 1) {
+      this.options[name] = value
+    }
+
+    return this.options[name]
+  }
+
+  /**
+   * Get or set a handler.
+   * @param {string} type - Handler type.
+   * @param {string} name - Handler name.
+   * @param {Function} fn - Set the handler method.
+   */
+  handler (type, name, fn) {
+    if (arguments.length > 2) {
+      this.handlers[type][name] = fn
+      this._refreshHandlersInParams({[type]: {[name]: fn}}, this.params)
+    }
+
+    return this.handlers[type][name]
+  }
+
+  /**
+   * Get or set a parser.
+   * @param {string} name - Parser name.
+   * @param {parserFn} fn - Set the parser method.
+   * @return {parserFn} The parser method.
+   */
+  parser (name, fn) {
+    return this.handler('parsers', ...arguments)
+  }
+
+  /**
+   * Get or set a formatter.
+   * @param {string} name - Formatter name.
+   * @param {formatterFn} fn - Set the formatter method.
+   * @return {formatterFn} The formatter method.
+   */
+  formatter (name, fn) {
+    return this.handler('formatters', ...arguments)
+  }
+
+  /**
+   * Get or set a validator.
+   * @param {string} name - Validator name.
+   * @param {validatorFn} fn - Set the validator method.
+   * @return {validatorFn} The validator method.
+   */
+  validator (name, fn) {
+    return this.handler('validators', ...arguments)
+  }
+
+  /**
+   * Get a param
+   * @param {string} name - Param name.
+   * @return {MenqueryParam|undefined} The param or undefined if it doesn't exist.
+   */
+  get (name) {
+    name = this._getSchemaParamName(name)
+
+    return this.params[name]
+  }
+
+  /**
+   * Set param value.
+   * @param {string} name - Param name.
+   * @param {*} value - Param value.
+   * @param {Object} [options] - Param options.
+   * @return {MenqueryParam|undefined} The param or undefined if it doesn't exist.
+   */
+  set (name, value, options) {
+    name = this._getSchemaParamName(name)
+
+    if (this.params[name]) {
+      let param = this.params[name]
+
+      param.value(value)
+
+      _.forIn(options, (optionValue, option) => {
+        param.option(option, optionValue)
+      })
+
+      return param
+    } else {
+      return
+    }
+  }
+
+  /**
+   * Add param.
+   * @param {string} name - Param name.
+   * @param {*} [value] - Param value.
+   * @param {Object} [options] - Param options.
+   * @return {MenqueryParam|boolean} The param or false if param is set to false in schema options.
+   */
+  add (name, value, options) {
     if (name instanceof MenqueryParam) {
-      this.param[name.name] = name
-      return name
-    } else if (_.isObject(name)) {
-      let params = name
-      let keys = _.union(_.keys(this._params), _.keys(params))
-
-      keys.forEach((key) => this.param(key, null, params[key], true))
-
-      return this.params
+      options = name.options
+      value = name.value()
+      name = name.name
     }
 
     name = this._getSchemaParamName(name)
-
-    if (!set) {
-      return this.params[name]
-    }
 
     if (this.options[name] === false) {
       return false
     }
 
-    if (this.params[name]) {
-      this.params[name].value(value)
-      return this.params[name]
+    if (_.isString(options)) {
+      options = {default: options}
+    } else if (_.isNumber(options)) {
+      options = {type: Number, default: options}
+    } else if (_.isDate(options)) {
+      options = {type: Date, default: options}
+    } else if (_.isRegExp(options)) {
+      options = {type: RegExp, default: options}
+    } else if (_.isFunction(options)) {
+      options = {type: options}
     }
 
-    if (_.isString(properties)) {
-      properties = {default: properties}
-    } else if (_.isNumber(properties)) {
-      properties = {type: Number, default: properties}
-    } else if (_.isDate(properties)) {
-      properties = {type: Date, default: properties}
-    } else if (_.isFunction(properties)) {
-      properties = {type: properties}
-    }
+    options = _.assign(this._params[name], options)
+    this.params[name] = new MenqueryParam(name, value, options)
 
-    properties = _.assign(this._params[name], properties)
-    this.params[name] = new MenqueryParam(name, value, properties)
+    this._refreshHandlersInParams(this.handlers, {[name]: this.params[name]})
 
     return this.params[name]
   }
 
+  /**
+   * Get, set or add param.
+   * @param {string} name - Param name.
+   * @param {*} [value] - Param value.
+   * @param {Object} [options] - Param options.
+   * @return {MenqueryParam|undefined} The param or undefined if it doesn't exist.
+   */
+  param (name, value, options) {
+    if (arguments.length === 1) {
+      return this.get(name)
+    }
+
+    return this.set(name, value, options) || this.add(name, value, options)
+  }
+
+  /**
+   * Parse values of the schema params.
+   * @param {Object} [values] - Object with {param: value} pairs to parse.
+   * @return {Object} Parsed object.
+   */
   parse (values = {}) {
     let query = {}
 
@@ -125,6 +241,12 @@ export default class MenquerySchema {
     return query
   }
 
+  /**
+   * Validate values of the schema params.
+   * @param {Object} [values] - Object with {param: value} pairs to validate.
+   * @param {Function} [next] - Callback to be called with error
+   * @return {boolean} Result of the validation.
+   */
   validate (values = {}, next = (error) => !error) {
     let error
 
@@ -148,6 +270,16 @@ export default class MenquerySchema {
     }
 
     return next(error)
+  }
+
+  _refreshHandlersInParams (handlers = this.handlers, params = this.params) {
+    _.forIn(handlers, (typedHandler, type) => {
+      _.forIn(typedHandler, (handler, name) => {
+        _.forIn(params, (param) => {
+          param.handler(type, name, handler)
+        })
+      })
+    })
   }
 
   _getSchemaParamName (paramName) {
