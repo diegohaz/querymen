@@ -49,42 +49,42 @@ test('MenquerySchema param name', (t) => {
 
 test('MenquerySchema add', (t) => {
   t.equal(
-    schema().add('test', 123).name,
+    schema().param('test', 123).name,
     'test',
     'should add param')
 
   t.equal(
-    schema().add('test', null, 'string').value(),
+    schema().param('test', null, 'string').value(),
     'string',
     'should add param with default string value')
 
   t.equal(
-    schema().add('test', null, 123).value(),
+    schema().param('test', null, 123).value(),
     123,
     'should add param with default number value')
 
   t.deepEqual(
-    schema().add('test', null, new Date('2014-05-05')).value(),
+    schema().param('test', null, new Date('2014-05-05')).value(),
     new Date('2014-05-05'),
     'should add param with default date value')
 
   t.equal(
-    schema().add('test', '123', Number).value(),
+    schema().param('test', '123', Number).value(),
     123,
     'should add param with type number')
 
   t.deepEqual(
-    schema().add('test', '2014-05-05', Date).value(),
+    schema().param('test', '2014-05-05', Date).value(),
     new Date('2014-05-05'),
     'should add param with type date')
 
   t.equal(
-    schema({}, {test: false}).add('test', '123'),
+    schema({}, {test: false}).param('test', '123'),
     false,
     'should not add param')
 
   t.deepEqual(
-    schema().add(new MenqueryParam('test', '123')).value(),
+    schema().param(new MenqueryParam('test', '123')).value(),
     '123',
     'should add MenqueryParam instance')
 
@@ -93,32 +93,24 @@ test('MenquerySchema add', (t) => {
 
 test('MenquerySchema manipulation', (t) => {
   t.equal(
-    schema().set('test', '123').value(),
+    schema().param('test', '123').value(),
     '123',
     'should set new param')
 
   t.equal(
-    schema({test: 123}).set('test', 456).value(),
+    schema({test: 123}).param('test', 456).value(),
     456,
     'should set existing param')
 
   t.equal(
-    schema().get('sort').name,
+    schema().param('sort').name,
     'sort',
     'should get param')
 
   t.equal(
-    Object.keys(schema().addAll({test: '123', test2: Number})).length,
+    Object.keys(schema().param({test: '123', test2: Number})).length,
     6,
     'should add all params')
-
-  let mySchema = schema()
-  mySchema.remove('page')
-
-  t.equal(
-    mySchema.get('page'),
-    undefined,
-    'should remove param')
 
   t.end()
 })

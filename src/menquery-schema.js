@@ -36,32 +36,36 @@ export default class MenquerySchema {
       }
     }
 
-    this.addAll(params)
+    this.param(params)
   }
 
-  get (paramName) {
-    return this.params[this._getSchemaParamName(paramName)]
-  }
+  param (name, value, properties, set = !_.isNil(value) || !_.isNil(properties)) {
+    if (name instanceof MenqueryParam) {
+      this.param[name.name] = name
+      return name
+    } else if (_.isObject(name)) {
+      let params = name
+      let keys = _.union(_.keys(this._params), _.keys(params))
 
-  set (paramName, value, properties = {}) {
-    paramName = this._getSchemaParamName(paramName)
+      keys.forEach((key) => this.param(key, null, params[key], true))
 
-    if (!this.params[paramName]) {
-      this.add(paramName, value, properties)
-    } else {
-      this.params[paramName].value(value)
+      return this.params
     }
 
-    return this.params[paramName]
-  }
+    name = this._getSchemaParamName(name)
 
-  add (paramName, value, properties = {}) {
-    if (paramName instanceof MenqueryParam) {
-      this.params[paramName.name] = paramName
-      return paramName
+    if (!set) {
+      return this.params[name]
     }
 
-    paramName = this._getSchemaParamName(paramName)
+    if (this.options[name] === false) {
+      return false
+    }
+
+    if (this.params[name]) {
+      this.params[name].value(value)
+      return this.params[name]
+    }
 
     if (_.isString(properties)) {
       properties = {default: properties}
@@ -73,29 +77,10 @@ export default class MenquerySchema {
       properties = {type: properties}
     }
 
-    if (this.options[paramName] === false) {
-      return false
-    }
+    properties = _.assign(this._params[name], properties)
+    this.params[name] = new MenqueryParam(name, value, properties)
 
-    properties = _.assign(this._params[paramName], properties)
-    this.params[paramName] = new MenqueryParam(paramName, value, properties)
-
-    return this.params[paramName]
-  }
-
-  addAll (params) {
-    let paramsKeys = _.keys(params)
-    let keys = _.union(_.keys(this._params), paramsKeys)
-
-    keys.forEach((paramName) => {
-      this.add(paramName, null, params[paramName])
-    })
-
-    return this.params
-  }
-
-  remove (paramName) {
-    delete this.params[paramName]
+    return this.params[name]
   }
 
   parse (values = {}) {
