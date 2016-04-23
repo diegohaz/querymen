@@ -497,6 +497,13 @@ test('MenqueryParam parsers', (t) => {
     {test: 'test'},
     'should apply custom parser')
 
+  parserParam.option('multiple', true)
+
+  t.deepEqual(
+    parserParam.parse('TEST,FOO'),
+    {test: {$in: ['test', 'foo']}},
+    'should apply custom parser to multiple values')
+
   t.end()
 })
 
