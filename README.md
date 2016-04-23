@@ -186,14 +186,12 @@ Even after a MenquerySchema object was created, you can manipulate its parameter
 var schema = new MenquerySchema();
 
 // schema.add(paramName, value, options)
-schema.add('min_distance', null, {type: Number, default: 10, max: 40});
+schema.param('min_distance', null, {type: Number, default: 10, max: 40});
 
-schema.get('min_distance').value(); // null
-schema.set('min_distance', 48);
-schema.get('min_distance').value(); // 48
+schema.param('min_distance').value(); // null
+schema.param('min_distance', 48);
+schema.param('min_distance').value(); // 48
 schema.validate(); // false (48 is greater than 40)
-schema.remove('min_distance');
-schema.get('min_distance'); // undefined
 ```
 
 ### MenqueryParam
@@ -223,7 +221,7 @@ param.validate(function(err) {
 });
 
 var schema = new MenquerySchema();
-schema.add(param);
+schema.param(param);
 schema.parse(); // {filter: {foo: 'bar,baz'}}
 schema.validate(); // false
 ```
