@@ -16,6 +16,11 @@ test('MenqueryParam type', (t) => {
     'should be converted to number')
 
   t.deepEqual(
+    param('testing', {type: RegExp}).value(),
+    new RegExp('testing', 'i'),
+    'should be converted to RegExp')
+
+  t.deepEqual(
     param('2016-04-18', {type: Date}).value(),
     new Date('2016-04-18'),
     'should be converted to date')
@@ -35,6 +40,11 @@ test('MenqueryParam type with multiple value', (t) => {
     'should be converted to number')
 
   t.deepEqual(
+    param('testing, test', {type: RegExp, multiple: true}).value(),
+    [new RegExp('testing', 'i'), new RegExp('test', 'i')],
+    'should be converted to RegExp')
+
+  t.deepEqual(
     param('2016-04-18,2018-04-18', {type: Date, multiple: true}).value(),
     [new Date('2016-04-18'), new Date('2018-04-18')],
     'should be converted to date')
@@ -42,16 +52,26 @@ test('MenqueryParam type with multiple value', (t) => {
   t.end()
 })
 
-test('MenqueryParam filter', (t) => {
+test('MenqueryParam value', (t) => {
   t.equal(
     param(null, {default: 'Hello'}).value(),
     'Hello',
-    'should set default value')
+    'should set default value string')
+
+  t.equal(
+    param(null, {type: Number, default: 30}).value(),
+    30,
+    'should set default value number')
 
   t.equal(
     param('Test', {default: 'Hello'}).value(),
     'Test',
-    'should not set default value')
+    'should not set default value string')
+
+  t.equal(
+    param(20, {type: Number, default: 30}).value(),
+    20,
+    'should not set default value number')
 
   t.equal(
     param(null, {default: () => 'Hello'}).value(),
@@ -61,7 +81,7 @@ test('MenqueryParam filter', (t) => {
   t.equal(
     param(null, {type: String, default: 12}).value(),
     '12',
-    'should set default value with type')
+    'should set default value with different type')
 
   t.equal(
     param('Bé_ free!', {normalize: true}).value(),
@@ -89,11 +109,6 @@ test('MenqueryParam filter', (t) => {
     'should not trim value')
 
   t.deepEqual(
-    param('testing', {regex: true}).value(),
-    new RegExp('testing', 'i'),
-    'should regex value')
-
-  t.deepEqual(
     param('Hello', {get: (value, param) => param.name + value + '!'}).value(),
     'testHello!',
     'should get value')
@@ -106,7 +121,7 @@ test('MenqueryParam filter', (t) => {
   t.end()
 })
 
-test('MenqueryParam filter with multiple value', (t) => {
+test('MenqueryParam value with multiple value', (t) => {
   t.deepEqual(
     param('Bé_ free!,Bê smart!', {normalize: true, multiple: true}).value(),
     ['be free', 'be smart'],
@@ -133,11 +148,6 @@ test('MenqueryParam filter with multiple value', (t) => {
     'should not trim value')
 
   t.deepEqual(
-    param('testing, verifying', {regex: true, multiple: true}).value(),
-    [new RegExp('testing', 'i'), new RegExp('verifying', 'i')],
-    'should regex value')
-
-  t.deepEqual(
     param('Hello,Hi', {get: (value) => value + '!', multiple: true}).value(),
     ['Hello!', 'Hi!'],
     'should get value')
@@ -150,7 +160,7 @@ test('MenqueryParam filter with multiple value', (t) => {
   t.end()
 })
 
-test('MenqueryParam validation', (t) => {
+test('MenqueryParam validate', (t) => {
   t.equal(
     param().validate(),
     true,
@@ -244,7 +254,7 @@ test('MenqueryParam validation', (t) => {
   t.end()
 })
 
-test('MenqueryParam validation with multiple value', (t) => {
+test('MenqueryParam validate with multiple value', (t) => {
   t.equal(
     param(null, {multiple: true}).validate(',,,'),
     true,
@@ -414,6 +424,115 @@ test('MenqueryParam parse $or', (t) => {
     or(123, {type: Number, operator: '$lte'}).parse(),
     {$or: [{test1: {$lte: 123}}, {test2: {$lte: 123}}]},
     'should parse $lte')
+
+  t.end()
+})
+
+test('MenqueryParam options', (t) => {
+  t.ok(
+    param().option('paths'),
+    'should get option')
+
+  t.notOk(
+    param().option('isPlural'),
+    'should not get nonexistent option')
+
+  t.end()
+})
+
+test('MenqueryParam formatters', (t) => {
+  let formatterParam = param()
+  formatterParam.formatter('capitalize', (capitalize, value, param) => {
+    return capitalize ? _.capitalize(value) : value
+  })
+
+  t.notOk(
+    param().formatter('capitalize'),
+    'should not get nonexistent formatter')
+
+  t.ok(
+    formatterParam.formatter('capitalize'),
+    'should get custom formatter')
+
+  t.equal(
+    formatterParam.value('TEST'),
+    'TEST',
+    'should not apply custom formatter if option was not passed')
+
+  t.ok(
+    formatterParam.option('capitalize', true),
+    'should set option')
+
+  t.equal(
+    formatterParam.value('TEST'),
+    'Test',
+    'should apply custom formatter')
+
+  t.end()
+})
+
+test('MenqueryParam parsers', (t) => {
+  let parserParam = param()
+  parserParam.parser('makeLowercase', parserParam.formatter('lowercase'))
+
+  t.notOk(
+    param().parser('makeLowercase'),
+    'should not get nonexistent parser')
+
+  t.ok(
+    parserParam.parser('makeLowercase'),
+    'should get custom parser')
+
+  t.deepEqual(
+    parserParam.parse('TEST'),
+    {test: 'TEST'},
+    'should not apply custom parser if option was not passed')
+
+  t.ok(
+    parserParam.option('makeLowercase', true),
+    'should set option')
+
+  t.deepEqual(
+    parserParam.parse('TEST'),
+    {test: 'test'},
+    'should apply custom parser')
+
+  t.end()
+})
+
+test('MenqueryParam validators', (t) => {
+  let validatorParam = param()
+  validatorParam.validator('isPlural', (isPlural, value, param) => ({
+    valid: !isPlural || value.substr(-1) === 's'
+  }))
+
+  t.ok(
+    param().validator('minlength'),
+    'should get validator')
+
+  t.notOk(
+    param().validator('isPlural'),
+    'should not get nonexistent validator')
+
+  t.ok(
+    validatorParam.validator('isPlural'),
+    'should get custom validator')
+
+  t.ok(
+    validatorParam.validate('test'),
+    'should not apply custom validator if option was not passed')
+
+  t.ok(
+    validatorParam.option('isPlural', true),
+    'should set option')
+
+  t.notOk(
+    validatorParam.validate('test'),
+    'should not apply custom validator and validate with error')
+
+  t.ok(
+    validatorParam.validate('tests'),
+    'should not apply custom validator and validate with success')
 
   t.end()
 })

@@ -9,9 +9,8 @@ export default class MenquerySchema {
     this.params = {}
     this._params = {
       q: {
-        type: String,
+        type: RegExp,
         normalize: true,
-        regex: true,
         paths: ['_q']
       },
       page: {
@@ -38,7 +37,8 @@ export default class MenquerySchema {
 
     this.param(params)
   }
-
+  // change to options
+  // must add options if it is passed
   param (name, value, properties, set = !_.isNil(value) || !_.isNil(properties)) {
     if (name instanceof MenqueryParam) {
       this.param[name.name] = name
@@ -88,7 +88,10 @@ export default class MenquerySchema {
 
     _.forIn(this.params, (param) => {
       let value = values[this._getQueryParamName(param.name)]
-      param.value(value)
+
+      if (!_.isNil(value)) {
+        param.value(value)
+      }
     })
 
     _.forIn(this.params, (param) => {
@@ -132,7 +135,10 @@ export default class MenquerySchema {
 
     _.forIn(this.params, (param) => {
       let value = values[this._getQueryParamName(param.name)]
-      param.value(value, true)
+
+      if (!_.isNil(value)) {
+        param.value(value)
+      }
     })
 
     for (let i in this.params) {

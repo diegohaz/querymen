@@ -1,169 +1,199 @@
 import _ from 'lodash'
 
+/**
+ * Validator object.
+ * @typedef {Object} Validator
+ * @property {boolean} valid - Indicates if the value is valid or not.
+ * @property {string} message - The error message.
+ * @property {string} [param] - The name of the param.
+ * @property {*} [value] - The value of the param.
+ */
+/**
+ * Param parser callback.
+ * @callback parserFn
+ * @param {*} parserValue - The value passed to the parser.
+ * @param {*} paramValue - The value passed to the param.
+ * @param {MenqueryParam} param - The `MenqueryParam` object.
+ * @return {*} The parsed value
+ */
+/**
+ * Param formatter callback.
+ * @callback formatterFn
+ * @param {*} formatterValue - The value passed to the formatter.
+ * @param {*} paramValue - The value passed to the param.
+ * @param {MenqueryParam} param - The `MenqueryParam` object.
+ * @return {*} The formatted value
+ */
+/**
+ * Param validator callback.
+ * @callback validatorFn
+ * @param {*} validatorValue - The value passed to the validator.
+ * @param {*} paramValue - The value passed to the param.
+ * @param {MenqueryParam} param - The `MenqueryParam` object.
+ * @return {Validator}
+ */
+
 export default class MenqueryParam {
 
+  /**
+   * Create a param.
+   * @param {string} name - Param name.
+   * @param {*} [value] - The value of the param.
+   * @param {Object} [options] - Options of the param.
+   */
   constructor (name, value, options) {
-    this._validators = []
     this.name = name
+    this.validators = {}
+    this.parsers = {}
+    this.formatters = {}
     this.options = _.assign({
       type: String,
       paths: [name],
       bindTo: 'filter',
       multiple: false,
       separator: ',',
-      minlength: false,
-      maxlength: false,
-      lowercase: false,
-      uppercase: false,
-      normalize: false,
-      required: false,
-      regex: false,
-      match: false,
-      enum: false,
-      min: false,
-      max: false,
-      trim: true,
       operator: '$eq',
+      trim: true,
       set: (value, param) => value,
       get: (value, param) => value
     }, options)
 
+    this.formatter('default', (defaultValue, value, param) => {
+      if (_.isNil(value) || _.isNaN(value) || value === '') {
+        return _.isFunction(defaultValue) ? defaultValue(this) : defaultValue
+      }
+      return value
+    })
+
+    this.formatter('normalize', (normalize, value, param) => {
+      if (normalize && !_.isNil(value)) {
+        value = _.kebabCase(value).replace(/\-/g, ' ')
+      }
+      return value
+    })
+
+    this.formatter('lowercase', (lowercase, value, param) => {
+      if (lowercase && !_.isNil(value)) {
+        value = _.toLower(value)
+      }
+      return value
+    })
+
+    this.formatter('uppercase', (uppercase, value, param) => {
+      if (uppercase && !_.isNil(value)) {
+        value = _.toUpper(value)
+      }
+      return value
+    })
+
+    this.formatter('trim', (trim, value, param) => {
+      if (trim && !_.isNil(value)) {
+        value = _.trim(value)
+      }
+      return value
+    })
+
+    this.validator('required', (required, value, param) => ({
+      valid: !required || !_.isNil(value) && !_.isNaN(value) && value !== '',
+      message: `${param.name} is required`
+    }))
+
+    this.validator('min', (min, value, param) => ({
+      valid: !_.isNumber(min) || _.isNil(value) || value >= min,
+      message: `${param.name} must be greater than or equal to ${min}`
+    }))
+
+    this.validator('max', (max, value, param) => ({
+      valid: !_.isNumber(max) || _.isNil(value) || value <= max,
+      message: `${param.name} must be lower than or equal to ${max}`
+    }))
+
+    this.validator('minlength', (minlength, value, param) => ({
+      valid: !_.isNumber(minlength) || _.isNil(value) || value.length >= minlength,
+      message: `${param.name} must have length greater than or equal to ${minlength}`
+    }))
+
+    this.validator('maxlength', (maxlength, value, param) => ({
+      valid: !_.isNumber(maxlength) || _.isNil(value) || value.length <= maxlength,
+      message: `${param.name} must have length lower than or equal to ${maxlength}`
+    }))
+
+    this.validator('enum', (_enum, value, param) => ({
+      valid: !_.isArray(_enum) || _.isNil(value) || ~_enum.indexOf(value),
+      message: `${param.name} must be one of: ${_enum.join(', ')}`
+    }))
+
+    this.validator('match', (match, value, param) => ({
+      valid: !_.isRegExp(match) || _.isNil(value) || match.test(value),
+      message: `${param.name} must match regular expression ${match}`
+    }))
+
     this.value(value)
   }
 
-  default (value, defaultValue) {
-    if (_.isNil(value) || _.isNaN(value) || value === '') {
-      return _.isFunction(defaultValue) ? defaultValue(this) : defaultValue
+  /**
+   * Get or set an option.
+   * @param {string} name - Option name.
+   * @param {*} [value] - Set the value of the option.
+   * @return {*} Value of the option.
+   */
+  option (name, value) {
+    if (arguments.length > 1) {
+      this.options[name] = value
     }
-    return value
-  }
 
-  normalize (value, normalize) {
-    if (normalize && !_.isNil(value)) {
-      value = _.kebabCase(value).replace(/\-/g, ' ')
+    return this.options[name]
+  }
+  /**
+   * Get or set a parser.
+   * @param {string} name - Parser name.
+   * @param {parserFn} fn - Set the parser method.
+   * @return {parserFn} The parser method.
+   */
+  parser (name, fn) {
+    if (arguments.length > 1) {
+      this.parsers[name] = fn
     }
-    return value
+
+    return this.parsers[name]
   }
 
-  lowercase (value, lowercase) {
-    if (lowercase && !_.isNil(value)) {
-      value = _.toLower(value)
+  /**
+   * Get or set a validator.
+   * @param {string} name - Validator name.
+   * @param {validatorFn} fn - Set the validator method.
+   * @return {validatorFn} The validator method.
+   */
+  validator (name, fn) {
+    if (arguments.length > 1) {
+      this.validators[name] = fn
     }
-    return value
+
+    return this.validators[name]
   }
 
-  uppercase (value, uppercase) {
-    if (uppercase && !_.isNil(value)) {
-      value = _.toUpper(value)
+  /**
+   * Get or set a formatter.
+   * @param {string} name - Formatter name.
+   * @param {formatterFn} fn - Set the formatter method.
+   * @return {formatterFn} The formatter method.
+   */
+  formatter (name, fn) {
+    if (arguments.length > 1) {
+      this.formatters[name] = fn
     }
-    return value
+
+    return this.formatters[name]
   }
 
-  trim (value, trim) {
-    if (trim && !_.isNil(value)) {
-      value = _.trim(value)
-    }
-    return value
-  }
-
-  required (value, required) {
-    if (required) {
-      let validate = (value) => !_.isNil(value) && !_.isNaN(value) && value !== ''
-      this.addValidator({
-        validate: validate,
-        name: 'required',
-        required: required,
-        error: `${this.name} is required`
-      }, 0)
-    }
-    return value
-  }
-
-  min (value, min) {
-    if (_.isNumber(min)) {
-      let validate = (value) => _.isNil(value) || value >= min
-      this.addValidator({
-        validate: validate,
-        name: 'min',
-        min: min,
-        error: `${this.name} must be greater than or equal to ${min}`
-      })
-    }
-    return value
-  }
-
-  max (value, max) {
-    if (_.isNumber(max)) {
-      let validate = (value) => _.isNil(value) || value <= max
-      this.addValidator({
-        validate: validate,
-        name: 'max',
-        max: max,
-        error: `${this.name} must be lower than or equal to ${max}`
-      })
-    }
-    return value
-  }
-
-  minlength (value, minlength) {
-    if (_.isNumber(minlength)) {
-      let validate = (value) => _.isNil(value) || value.length >= minlength
-      this.addValidator({
-        validate: validate,
-        name: 'minlength',
-        minlength: minlength,
-        error: `${this.name} must have length greater than or equal to ${minlength}`
-      })
-    }
-    return value
-  }
-
-  maxlength (value, maxlength) {
-    if (_.isNumber(maxlength)) {
-      let validate = (value) => _.isNil(value) || value.length <= maxlength
-      this.addValidator({
-        validate: validate,
-        name: 'maxlength',
-        maxlength: maxlength,
-        error: `${this.name} must have length lower than or equal to ${maxlength}`
-      })
-    }
-    return value
-  }
-
-  enum (value, _enum) {
-    if (_.isArray(_enum)) {
-      let validate = (value) => _.isNil(value) || _enum.indexOf(value) !== -1
-      this.addValidator({
-        validate: validate,
-        name: 'enum',
-        enum: _enum,
-        error: `${this.name} must be one of: ${_enum.join(', ')}`
-      })
-    }
-    return value
-  }
-
-  match (value, match) {
-    if (_.isRegExp(match)) {
-      let validate = (value) => _.isNil(value) || match.test(value)
-      this.addValidator({
-        validate: validate,
-        name: 'match',
-        match: match,
-        error: `${this.name} must match regular expression ${match}`
-      })
-    }
-    return value
-  }
-
-  addValidator (validator, at = this._validators.length) {
-    _.remove(this._validators, {name: validator.name})
-    this._validators.splice(at, 0, validator)
-  }
-
+  /**
+   * Parse the param.
+   * @param {*} [value] - Set the param value.
+   * @param {string|string[]} path - Set the param path/paths.
+   * @return {Object} The parsed value.
+   */
   parse (value = this._value, path = this.options.paths) {
-    let options = this.options
+    let operator = this.options.operator
     let query = {}
 
     if (_.isNil(value)) {
@@ -172,33 +202,49 @@ export default class MenqueryParam {
       value = this.value(value)
     }
 
-    if (_.isArray(path) && path.length > 1) {
-      query.$or = path.map((p) => this.parse(value, p))
-      return query
-    } else if (_.isArray(path)) {
-      path = path[0]
+    if (_.isArray(path)) {
+      let paths = path
+      if (paths.length > 1) {
+        query.$or = paths.map((path) => this.parse(value, path))
+        return query
+      }
+      path = paths[0]
     }
 
-    if (_.isArray(value) && options.operator === '$eq') {
-      options.operator = '$in'
-    } else if (_.isArray(value) && options.operator === '$ne') {
-      options.operator = '$nin'
+    if (_.isArray(value)) {
+      operator = operator === '$ne' ? '$nin' : '$in'
     }
 
-    if (options.operator === '$eq' || _.isRegExp(value) && options.operator !== '$in') {
+    _.forIn(this.options, (optionValue, option) => {
+      if (_.isFunction(this.parsers[option])) {
+        if (_.isArray(value)) {
+          value = value.map((v) => this.parsers[option](optionValue, v))
+        } else {
+          value = this.parsers[option](optionValue, value)
+        }
+      }
+    })
+
+    if (operator === '$eq' || _.isRegExp(value)) {
       query[path] = value
     } else {
-      query[path] = {}
-      query[path][options.operator] = value
+      query[path] = {[operator]: value}
     }
 
     return query
   }
 
-  value (value, set = !_.isNil(value)) {
+  /**
+   * Get or set the param value.
+   * @param {*} [value] - Set the param value.
+   * @param {boolean} [bind=true] - Set if value must be bound to parameter or not.
+   * @return {*} The formatted value.
+   */
+  value (value, bind = true) {
     let options = this.options
+    let set = arguments.length
 
-    if (!set && this._value) {
+    if (!set) {
       if (_.isArray(this._value)) {
         return this._value.map((v) => options.get(v))
       } else {
@@ -206,36 +252,55 @@ export default class MenqueryParam {
       }
     }
 
-    if (set && this._value === value) {
-      return this._value
-    }
+    if (options.multiple) {
+      let values = value
 
-    if (options.multiple && _.isString(value) && value.search(options.separator) !== -1) {
-      let values = value.split(options.separator).map((v) => this.value(v))
-      this._value = values
-      return values
+      if (_.isString(value) && ~value.search(options.separator)) {
+        values = value.split(options.separator)
+      }
+
+      if (_.isArray(values)) {
+        values = values.map((value) => this.value(value, false))
+
+        if (bind) {
+          this._value = values
+        }
+
+        return values
+      }
     }
 
     _.forIn(this.options, (optionValue, option) => {
-      if (_.isFunction(this[option])) {
-        value = this[option](value, optionValue)
+      if (_.isFunction(this.formatters[option])) {
+        value = this.formatters[option](optionValue, value)
       }
     })
 
     if (!_.isNil(value)) {
-      if (options.regex) {
+      if (options.type.name === 'RegExp') {
         value = new RegExp(value, 'i')
       } else if (options.type.name === 'Date') {
         value = new Date(value)
       } else {
         value = options.type(value)
       }
-      this._value = options.set(value, this)
     }
 
-    return this._value
+    value = options.set(value, this)
+
+    if (bind) {
+      this._value = value
+    }
+
+    return value
   }
 
+  /**
+   * Validates the param.
+   * @param {*} [value] - Set the param value.
+   * @param {Function} [next] - Callback to be called with error
+   * @return {boolean} Result of the validation.
+   */
   validate (value = this._value, next = (error) => !error) {
     let error
 
@@ -253,15 +318,19 @@ export default class MenqueryParam {
       return next(error)
     }
 
-    for (let i = 0; i < this._validators.length; i++) {
+    for (let option in this.options) {
       if (error) break
-      let validator = this._validators[i]
+      if (!_.isFunction(this.validators[option])) continue
+      let optionValue = this.options[option]
+      let validation = this.validators[option](optionValue, value, this)
 
-      if (_.isFunction(validator.validate) && !validator.validate(value)) {
+      if (!validation.valid) {
         error = _.assign({
+          name: option,
           param: this.name,
-          value: value
-        }, _.omit(validator, 'validate'))
+          value: value,
+          [option]: optionValue
+        }, validation)
       }
     }
 

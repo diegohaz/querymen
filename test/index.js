@@ -20,15 +20,6 @@ app.get('/posts', menquery(), (err, req, res, next) => {
 test('Menquery middleware', (t) => {
   request(app)
     .get('/posts')
-    .query({q: 'test'})
-    .expect(200)
-    .end((err, res) => {
-      if (err) throw err
-      t.deepEqual(res.body.filter._q, /test/i, 'should respond with parsed data')
-    })
-
-  request(app)
-    .get('/posts')
     .query({page: 50})
     .expect(400)
     .end((err, res) => {
