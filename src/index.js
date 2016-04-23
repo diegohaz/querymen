@@ -2,7 +2,8 @@ import _ from 'lodash'
 import MenqueryParam from './menquery-param'
 import MenquerySchema from './menquery-schema'
 
-export {MenqueryParam, MenquerySchema}
+export {MenqueryParam as Param}
+export {MenquerySchema as Schema}
 
 export default function menquery (schema, options) {
   return function (req, res, next) {

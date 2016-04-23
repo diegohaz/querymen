@@ -1,7 +1,7 @@
 import test from 'tape'
-import {MenquerySchema, MenqueryParam} from '../src/'
+import {Schema, Param} from '../src/'
 
-let schema = (params, options) => new MenquerySchema(params, options)
+let schema = (params, options) => new Schema(params, options)
 
 test('MenquerySchema param name', (t) => {
   t.equal(
@@ -84,7 +84,7 @@ test('MenquerySchema add', (t) => {
     'should not add param')
 
   t.deepEqual(
-    schema().param(new MenqueryParam('test', '123')).value(),
+    schema().param(new Param('test', '123')).value(),
     '123',
     'should add MenqueryParam instance')
 

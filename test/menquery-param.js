@@ -1,8 +1,8 @@
 import test from 'tape'
 import _ from 'lodash'
-import {MenqueryParam} from '../src/'
+import {Param} from '../src/'
 
-let param = (value, options) => new MenqueryParam('test', value, options)
+let param = (value, options) => new Param('test', value, options)
 
 test('MenqueryParam type', (t) => {
   t.equal(
