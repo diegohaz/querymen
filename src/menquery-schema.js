@@ -75,7 +75,7 @@ export default class MenquerySchema {
   handler (type, name, fn) {
     if (arguments.length > 2) {
       this.handlers[type][name] = fn
-      this._refreshHandlersInParams({[type]: {[name]: fn}}, this.params)
+      this._refreshHandlersInParams({[type]: {[name]: fn}})
     }
 
     return this.handlers[type][name]
@@ -171,6 +171,8 @@ export default class MenquerySchema {
       options = {default: options}
     } else if (_.isNumber(options)) {
       options = {type: Number, default: options}
+    } else if (_.isBoolean(options)) {
+      options = {type: Boolean, default: options}
     } else if (_.isDate(options)) {
       options = {type: Date, default: options}
     } else if (_.isRegExp(options)) {
@@ -182,7 +184,7 @@ export default class MenquerySchema {
     options = _.assign(this._params[name], options)
     this.params[name] = new MenqueryParam(name, value, options)
 
-    this._refreshHandlersInParams(this.handlers, {[name]: this.params[name]})
+    this._refreshHandlersInParams(undefined, {[name]: this.params[name]})
 
     return this.params[name]
   }
