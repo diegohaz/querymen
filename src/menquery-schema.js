@@ -1,6 +1,9 @@
 import _ from 'lodash'
 import MenqueryParam from './menquery-param'
 
+/**
+ * MenquerySchema class.
+ */
 export default class MenquerySchema {
 
   /**

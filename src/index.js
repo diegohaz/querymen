@@ -47,6 +47,7 @@ export {MenquerySchema as Schema}
 
 /**
  * Get or set a handler.
+ * @memberof menquery
  * @param {string} type - Handler type.
  * @param {string} name - Handler name.
  * @param {Function} [fn] - Set the handler method.
@@ -61,6 +62,7 @@ export function handler (type, name, fn) {
 
 /**
  * Get or set a parser.
+ * @memberof menquery
  * @param {string} name - Parser name.
  * @param {parserFn} [fn] - Set the parser method.
  * @return {parserFn} The parser method.
@@ -71,6 +73,7 @@ export function parser (name, fn) {
 
 /**
  * Get or set a formatter.
+ * @memberof menquery
  * @param {string} name - Formatter name.
  * @param {formatterFn} [fn] - Set the formatter method.
  * @return {formatterFn} The formatter method.
@@ -81,6 +84,7 @@ export function formatter (name, fn) {
 
 /**
  * Get or set a validator.
+ * @memberof menquery
  * @param {string} name - Validator name.
  * @param {validatorFn} [fn] - Set the validator method.
  * @return {validatorFn} The validator method.
@@ -91,6 +95,7 @@ export function validator (name, fn) {
 
 /**
  * Create a middleware.
+ * @memberof menquery
  * @param {MenquerySchema|Object} [schema] - Schema object.
  * @param {Object} [options] - Options to be passed to schema.
  * @return {Function} The middleware.

@@ -1,5 +1,6 @@
 import _ from 'lodash'
 
+/** MenqueryParam class. */
 export default class MenqueryParam {
 
   /**
