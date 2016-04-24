@@ -9,7 +9,7 @@ export default class MenqueryParam {
    * @param {*} [value] - The value of the param.
    * @param {Object} [options] - Options of the param.
    */
-  constructor (name, value, options) {
+  constructor (name, value, options = {}) {
     this.name = name
     this.handlers = {
       parsers: {},
@@ -28,9 +28,16 @@ export default class MenqueryParam {
       get: (value, param) => value
     }, options)
 
+    if (_.isNil(options.type) && !_.isNil(value)) {
+      this.options.type = this._getType(value)
+    }
+
     this.formatter('default', (defaultValue, value, param) => {
       if (_.isNil(value) || _.isNaN(value) || value === '') {
-        return _.isFunction(defaultValue) ? defaultValue(this) : defaultValue
+        value = _.isFunction(defaultValue) ? defaultValue(this) : defaultValue
+        if (_.isNil(options.type)) {
+          param.option('type', this._getType(value))
+        }
       }
       return value
     })
@@ -43,21 +50,21 @@ export default class MenqueryParam {
     })
 
     this.formatter('lowercase', (lowercase, value, param) => {
-      if (lowercase && !_.isNil(value)) {
+      if (lowercase && _.isString(value)) {
         value = _.toLower(value)
       }
       return value
     })
 
     this.formatter('uppercase', (uppercase, value, param) => {
-      if (uppercase && !_.isNil(value)) {
+      if (uppercase && _.isString(value)) {
         value = _.toUpper(value)
       }
       return value
     })
 
     this.formatter('trim', (trim, value, param) => {
-      if (trim && !_.isNil(value)) {
+      if (trim && _.isString(value)) {
         value = _.trim(value)
       }
       return value
@@ -192,9 +199,9 @@ export default class MenqueryParam {
       let parser = this.handlers.parsers[option]
       if (_.isFunction(parser)) {
         if (_.isArray(value)) {
-          value = value.map((v) => parser(optionValue, v))
+          value = value.map((v) => parser(optionValue, v, this))
         } else {
-          value = parser(optionValue, value)
+          value = parser(optionValue, value, this)
         }
       }
     })
@@ -246,7 +253,7 @@ export default class MenqueryParam {
     _.forIn(this.options, (optionValue, option) => {
       let formatter = this.handlers.formatters[option]
       if (_.isFunction(formatter)) {
-        value = formatter(optionValue, value)
+        value = formatter(optionValue, value, this)
       }
     })
 
@@ -254,7 +261,7 @@ export default class MenqueryParam {
       if (options.type.name === 'RegExp') {
         value = new RegExp(value, 'i')
       } else if (options.type.name === 'Date') {
-        value = new Date(value)
+        value = new Date(/^\d{5,}$/.test(value) ? Number(value) : value)
       } else if (options.type.name === 'Boolean') {
         value = !(value === 'false' || value === '0' || !value)
       } else {
@@ -287,8 +294,8 @@ export default class MenqueryParam {
 
     if (_.isArray(value)) {
       for (let i = 0; i < value.length; i++) {
-        if (error) break
         this.validate(value[i], (err) => { error = err })
+        if (error) break
       }
 
       return next(error)
@@ -296,7 +303,6 @@ export default class MenqueryParam {
 
     for (let option in this.options) {
       let validator = this.handlers.validators[option]
-      if (error) break
       if (!_.isFunction(validator)) continue
       let optionValue = this.options[option]
       let validation = validator(optionValue, value, this)
@@ -308,9 +314,24 @@ export default class MenqueryParam {
           value: value,
           [option]: optionValue
         }, validation)
+        break
       }
     }
 
     return next(error)
+  }
+
+  _getType (value) {
+    if (_.isNumber(value)) {
+      return Number
+    } else if (_.isBoolean(value)) {
+      return Boolean
+    } else if (_.isDate(value)) {
+      return Date
+    } else if (_.isRegExp(value)) {
+      return RegExp
+    } else {
+      return String
+    }
   }
 }
