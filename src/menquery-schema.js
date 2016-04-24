@@ -3,6 +3,11 @@ import MenqueryParam from './menquery-param'
 
 export default class MenquerySchema {
 
+  /**
+   * Create a schema.
+   * @param {Object} [params] - Params object.
+   * @param {Object} [options] - Options object.
+   */
   constructor (params = {}, options = {}) {
     this.options = options
     this.params = {}
@@ -62,7 +67,7 @@ export default class MenquerySchema {
    * Get or set a handler.
    * @param {string} type - Handler type.
    * @param {string} name - Handler name.
-   * @param {Function} fn - Set the handler method.
+   * @param {Function} [fn] - Set the handler method.
    */
   handler (type, name, fn) {
     if (arguments.length > 2) {
@@ -76,7 +81,7 @@ export default class MenquerySchema {
   /**
    * Get or set a parser.
    * @param {string} name - Parser name.
-   * @param {parserFn} fn - Set the parser method.
+   * @param {parserFn} [fn] - Set the parser method.
    * @return {parserFn} The parser method.
    */
   parser (name, fn) {
@@ -86,7 +91,7 @@ export default class MenquerySchema {
   /**
    * Get or set a formatter.
    * @param {string} name - Formatter name.
-   * @param {formatterFn} fn - Set the formatter method.
+   * @param {formatterFn} [fn] - Set the formatter method.
    * @return {formatterFn} The formatter method.
    */
   formatter (name, fn) {
@@ -96,7 +101,7 @@ export default class MenquerySchema {
   /**
    * Get or set a validator.
    * @param {string} name - Validator name.
-   * @param {validatorFn} fn - Set the validator method.
+   * @param {validatorFn} [fn] - Set the validator method.
    * @return {validatorFn} The validator method.
    */
   validator (name, fn) {
