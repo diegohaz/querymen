@@ -254,6 +254,8 @@ export default class MenqueryParam {
         value = new RegExp(value, 'i')
       } else if (options.type.name === 'Date') {
         value = new Date(value)
+      } else if (options.type.name === 'Boolean') {
+        value = !(value === 'false' || value === '0' || !value)
       } else {
         value = options.type(value)
       }

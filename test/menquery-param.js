@@ -15,6 +15,11 @@ test('MenqueryParam type', (t) => {
     23,
     'should be converted to number')
 
+  t.equal(
+    param('1', {type: Boolean}).value(),
+    true,
+    'should be converted to boolean')
+
   t.deepEqual(
     param('testing', {type: RegExp}).value(),
     new RegExp('testing', 'i'),
@@ -38,6 +43,11 @@ test('MenqueryParam type with multiple value', (t) => {
     param('23, 24', {type: Number, multiple: true}).value(),
     [23, 24],
     'should be converted to number')
+
+  t.deepEqual(
+    param('1,false,0,-1', {type: Boolean, multiple: true}).value(),
+    [true, false, false, true],
+    'should be converted to boolean')
 
   t.deepEqual(
     param('testing, test', {type: RegExp, multiple: true}).value(),
