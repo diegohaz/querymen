@@ -84,6 +84,8 @@ test('MenqueryParam', (t) => {
 
   t.test('MenqueryParam validate', (st) => {
     let validate = (...args) => param(...args).validate()
+    let minDate = new Date('2016-01-01')
+    let maxDate = new Date('2016-04-25')
     st.true(validate(), 'should validate no options with success')
     st.true(validate(null, {required: false}), 'should validate non required with success')
     st.false(validate(null, {required: true}), 'should validate required with error')
@@ -91,9 +93,13 @@ test('MenqueryParam', (t) => {
     st.true(validate(null, {min: 4}), 'should validate null value min with success')
     st.false(validate(3, {min: 4}), 'should validate min with error')
     st.true(validate(4, {min: 4}), 'should validate min with success')
+    st.false(validate(new Date('2015'), {min: minDate}), 'should validate min date with error')
+    st.true(validate(minDate, {min: minDate}), 'should validate min date with success')
     st.true(validate(null, {max: 4}), 'should validate null value max with success')
     st.false(validate(5, {max: 4}), 'should validate max with error')
     st.true(validate(4, {max: 4}), 'should validate max with success')
+    st.false(validate(new Date('2017'), {max: maxDate}), 'should validate max date with error')
+    st.true(validate(maxDate, {max: maxDate}), 'should validate max date with success')
     st.true(validate(null, {minlength: 2}), 'should validate null value minlength with success')
     st.false(validate('a', {minlength: 2}), 'should validate minlength with error')
     st.true(validate('ab', {minlength: 2}), 'should validate minlength with success')

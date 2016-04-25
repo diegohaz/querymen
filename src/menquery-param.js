@@ -76,12 +76,12 @@ export default class MenqueryParam {
     }))
 
     this.validator('min', (min, value, param) => ({
-      valid: !_.isNumber(min) || _.isNil(value) || value >= min,
+      valid: _.isNil(value) || value >= min,
       message: `${param.name} must be greater than or equal to ${min}`
     }))
 
     this.validator('max', (max, value, param) => ({
-      valid: !_.isNumber(max) || _.isNil(value) || value <= max,
+      valid: _.isNil(value) || value <= max,
       message: `${param.name} must be lower than or equal to ${max}`
     }))
 
