@@ -9,10 +9,15 @@ test('MenqueryParam', (t) => {
   t.test('MenqueryParam constructor type', (st) => {
     let type = (value) => param(value).option('type')
     st.same(type('test'), String, 'should set type string automatically')
+    st.same(type(['test']), String, 'should set type string automatically by array')
     st.same(type(123455), Number, 'should set type number automatically')
+    st.same(type([123455]), Number, 'should set type number automatically by array')
     st.same(type(false), Boolean, 'should set type boolean automatically')
+    st.same(type([false]), Boolean, 'should set type boolean automatically by array')
     st.same(type(new Date()), Date, 'should set type date automatically')
+    st.same(type([new Date()]), Date, 'should set type date automatically by array')
     st.same(type(/test/i), RegExp, 'should set type regexp automatically')
+    st.same(type([/test/i]), RegExp, 'should set type regexp automatically by array')
     st.end()
   })
 
@@ -79,6 +84,12 @@ test('MenqueryParam', (t) => {
     st.same(value('1,0,true,false', Boolean), [true, false, true, false], 'should convert to boolean')
     st.same(value('foo,bar', RegExp), [/foo/i, /bar/i], 'should convert to regexp')
     st.same(dateValue('2016-04-24,1461456000000'), [date, date], 'should convert to date')
+    value = (val, type) => param(val, {type: [type]}).value()
+    st.same(value('23,24', String), ['23', '24'], 'should convert to string with array type')
+    st.same(value('23,24', Number), [23, 24], 'should convert to number with array type')
+    st.same(value('1,0,true,false', Boolean), [true, false, true, false], 'should convert to boolean with array type')
+    st.same(value('foo,bar', RegExp), [/foo/i, /bar/i], 'should convert to regexp with array type')
+    st.same(dateValue('2016-04-24,1461456000000'), [date, date], 'should convert to date with array type')
     st.end()
   })
 

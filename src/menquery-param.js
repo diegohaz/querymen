@@ -32,6 +32,11 @@ export default class MenqueryParam {
       this.options.type = this._getType(value)
     }
 
+    if (_.isArray(this.options.type)) {
+      this.options.multiple = true
+      this.options.type = this.options.type[0]
+    }
+
     this.formatter('default', (defaultValue, value, param) => {
       if (_.isNil(value) || _.isNaN(value) || value === '') {
         value = _.isFunction(defaultValue) ? defaultValue(this) : defaultValue
@@ -330,6 +335,9 @@ export default class MenqueryParam {
       return Date
     } else if (_.isRegExp(value)) {
       return RegExp
+    } else if (_.isArray(value)) {
+      this.option('multiple', true)
+      return this._getType(value[0])
     } else {
       return String
     }
