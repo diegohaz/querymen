@@ -94,8 +94,8 @@ test('MenquerySchema validator', (t) => {
 
 test('MenquerySchema parser', (t) => {
   let mySchema = schema({test: 'help'})
-  let parser = mySchema.parser('elemMatch', (elemMatch, value) => {
-    return elemMatch ? {$elemMatch: {[elemMatch]: value}} : value
+  let parser = mySchema.parser('elemMatch', (elemMatch, value, path) => {
+    return elemMatch ? {[path]: {$elemMatch: {[elemMatch]: value}}} : value
   })
   t.true(parser, 'should create a parser')
   t.false(schema().parser('elemMatch'), 'should not get a nonexistent parser')

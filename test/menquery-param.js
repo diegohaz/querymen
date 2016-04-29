@@ -204,18 +204,21 @@ test('MenqueryParam formatter', (t) => {
 
 test('MenqueryParam parser', (t) => {
   let pParam = param(null, {multiple: true})
-  pParam.parser('toLower', (toLower, value, param) => {
-    t.equal(param.name, 'test', 'should pass param object to parser method')
-    return pParam.formatter('lowercase')(toLower, value, param)
+  pParam.parser('elemMatch', (elemMatch, value, path, operator, param, schema) => {
+    t.true(path, 'should pass path to parser')
+    t.true(operator, 'should pass operator to parser')
+    return elemMatch
+      ? {[path]: {$elemMatch: {[elemMatch]: {[operator]: value}}}}
+      : {[path]: operator !== '$eq' ? {[operator]: value} : value}
   })
-  t.false(param().parser('toLower'), 'should not get nonexistent parser')
-  t.true(pParam.parser('toLower'), 'should get custom parser')
-  t.same(pParam.parse('TEST'), {test: 'TEST'}, 'should not apply custom parser if option was not set')
-  t.true(pParam.option('toLower', true), 'should set parser option to true')
-  t.same(pParam.parse('TEST'), {test: 'test'}, 'should apply custom parser')
-  t.same(pParam.parse('TEST,FOO'), {test: {$in: ['test', 'foo']}}, 'should apply custom parser to multiple values')
-  t.false(pParam.option('toLower', false), 'should set parser option to false')
-  t.same(pParam.parse('TEST'), {test: 'TEST'}, 'should not apply custom parser if option is false')
+  t.false(param().parser('elemMatch'), 'should not get nonexistent parser')
+  t.true(pParam.parser('elemMatch'), 'should get custom parser')
+  t.same(pParam.parse('test'), {test: 'test'}, 'should not apply custom parser if option was not set')
+  t.true(pParam.option('elemMatch', 'path'), 'should set parser option to true')
+  t.same(pParam.parse('test'), {test: {$elemMatch: {path: {$eq: 'test'}}}}, 'should apply custom parser')
+  t.same(pParam.parse('test,foo'), {test: {$elemMatch: {path: {$in: ['test', 'foo']}}}}, 'should apply custom parser to multiple values')
+  t.false(pParam.option('elemMatch', false), 'should set parser option to false')
+  t.same(pParam.parse('test'), {test: 'test'}, 'should not apply custom parser if option is false')
   t.end()
 })
 

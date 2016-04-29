@@ -8,6 +8,7 @@ export default class MenqueryParam {
    * @param {string} name - Param name.
    * @param {*} [value] - The value of the param.
    * @param {Object} [options] - Options of the param.
+   * @param {Object} [schema] - Schema of the param.
    */
   constructor (name, value, options = {}, schema = {}) {
     this.name = name
@@ -209,17 +210,18 @@ export default class MenqueryParam {
     }
 
     _.forIn(this.options, (optionValue, option) => {
-      let parser = this.handlers.parsers[option]
-      if (_.isFunction(parser)) {
-        if (_.isArray(value)) {
-          value = value.map((v) => parser(optionValue, v, this, this.schema))
-        } else {
-          value = parser(optionValue, value, this, this.schema)
-        }
+      let parser
+      if (option === 'parse' && _.isFunction(optionValue)) {
+        parser = optionValue
+      } else if (_.isFunction(this.handlers.parsers[option])) {
+        parser = this.handlers.parsers[option].bind(this, optionValue)
+      } else {
+        return
       }
+      query = parser(value, path, operator, this, this.schema)
     })
 
-    return this.options.parse(value, path, operator, this, this.schema)
+    return query
   }
 
   /**
@@ -256,7 +258,7 @@ export default class MenqueryParam {
     _.forIn(this.options, (optionValue, option) => {
       let formatter = this.handlers.formatters[option]
       if (_.isFunction(formatter)) {
-        value = formatter(optionValue, value, this)
+        value = formatter(optionValue, value, this, this.schema)
       }
     })
 
