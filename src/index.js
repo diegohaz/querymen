@@ -118,10 +118,10 @@ export function middleware (schema, options) {
         return next(err)
       }
 
-      req = _.merge(req, _schema.parse())
+      req.menquery = _schema.parse()
       next()
     })
   }
 }
 
-export default middleware
+export default {handler, parser, formatter, validator, middleware}
