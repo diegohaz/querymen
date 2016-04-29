@@ -244,7 +244,7 @@ export default class MenquerySchema {
         }
       } else if (param.name === 'select') {
         let values = _.isArray(value) ? value : [value]
-        values.forEach(value => {
+        values.forEach((value) => {
           if (value) {
             query.select[value] = 1
           }
