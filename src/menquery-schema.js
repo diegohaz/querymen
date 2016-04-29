@@ -23,7 +23,7 @@ export default class MenquerySchema {
       q: {
         type: RegExp,
         normalize: true,
-        paths: ['_q']
+        paths: ['keywords']
       },
       select: {
         type: [String],
@@ -70,7 +70,6 @@ export default class MenquerySchema {
           let fields = _.isArray(value) ? value : [value]
           let sort = {}
           fields.forEach((field) => {
-            if (_.isNil(field) || _.isEmpty(field)) return
             if (field.charAt(0) === '-') {
               sort[field.slice(1)] = -1
             } else if (field.charAt(0) === '+') {
