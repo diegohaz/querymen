@@ -31,7 +31,7 @@ test('Menquery middleware', (t) => {
     }
     next()
   }, (req, res) => {
-    res.status(200).json(_.pick(req, ['filter', 'options', 'test']))
+    res.status(200).json(_.pick(req, ['query', 'cursor', 'test']))
   })
 
   request(app)
@@ -49,7 +49,7 @@ test('Menquery middleware', (t) => {
     .expect(200)
     .end((err, res) => {
       if (err) throw err
-      t.equal(res.body.options.limit, 20, 'should respond with limit')
+      t.equal(res.body.cursor.limit, 20, 'should respond with limit')
     })
 
   t.end()
