@@ -19,7 +19,7 @@ export default class MenqueryParam {
     this.options = _.assign({
       type: String,
       paths: [name],
-      bindTo: 'filter',
+      bindTo: 'query',
       multiple: false,
       separator: ',',
       operator: '$eq',

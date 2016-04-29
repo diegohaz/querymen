@@ -25,25 +25,28 @@ export default class MenquerySchema {
         normalize: true,
         paths: ['_q']
       },
+      select: {
+        type: [String],
+        bindTo: 'select'
+      },
       page: {
         type: Number,
         default: 1,
         max: 30,
         min: 1,
-        bindTo: 'options'
+        bindTo: 'cursor'
       },
       limit: {
         type: Number,
         default: 30,
         max: 100,
         min: 1,
-        bindTo: 'options'
+        bindTo: 'cursor'
       },
       sort: {
-        type: String,
+        type: [String],
         default: 'name',
-        multiple: true,
-        bindTo: 'options'
+        bindTo: 'cursor'
       }
     }
 
@@ -238,6 +241,16 @@ export default class MenquerySchema {
           } else {
             query[bind].sort[field] = 1
           }
+        }
+      } else if (param.name === 'select') {
+        let values = _.isArray(value) ? value : [value]
+        values.forEach(value => {
+          if (value) {
+            query.select[value] = 1
+          }
+        })
+        if (_.isEmpty(query.select)) {
+          query.select = null
         }
       } else if (param.name === 'limit') {
         query[bind].limit = value
