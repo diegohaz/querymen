@@ -126,10 +126,10 @@ test('MenquerySchema name', (t) => {
 test('MenquerySchema default parse', (t) => {
   let parse = (...args) => schema().parse(...args)
   t.same(parse({q: 'testing'}).query._q, /testing/i, 'should parse q')
-  t.same(parse().select, null, 'should not parse undefined select')
-  t.same(parse({select: ''}).select, null, 'should not parse null select')
+  t.same(parse().select, {}, 'should not parse undefined select')
+  t.same(parse({select: ''}).select, {}, 'should not parse null select')
   t.same(parse({select: 'test1'}).select, {test1: 1}, 'should parse one select')
-  t.same(parse({select: 'test1,test2'}).select, {test1: 1, test2: 1}, 'should parse multiple select')
+  t.same(parse({select: 'test1,-test2'}).select, {test1: 1, test2: 0}, 'should parse multiple select')
   t.same(parse({page: 2, limit: 10}).cursor.skip, 10, 'should parse page')
   t.same(parse({limit: 10}).cursor.limit, 10, 'should parse limit')
   t.same(parse({sort: '-createdAt'}).cursor.sort, {createdAt: -1}, 'should parse sort')

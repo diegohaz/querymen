@@ -9,8 +9,9 @@ export default class MenqueryParam {
    * @param {*} [value] - The value of the param.
    * @param {Object} [options] - Options of the param.
    */
-  constructor (name, value, options = {}) {
+  constructor (name, value, options = {}, schema = {}) {
     this.name = name
+    this.schema = schema
     this.handlers = {
       parsers: {},
       formatters: {},
@@ -24,8 +25,15 @@ export default class MenqueryParam {
       separator: ',',
       operator: '$eq',
       trim: true,
-      set: (value, param) => value,
-      get: (value, param) => value
+      format: (value, param, schema) => value,
+      validate: (value, param, schema) => ({valid: true}),
+      parse: (value, path, operator, param, schema) => {
+        if (operator === '$eq' || _.isRegExp(value)) {
+          return {[path]: value}
+        } else {
+          return {[path]: {[operator]: value}}
+        }
+      }
     }, options)
 
     if (_.isNil(options.type) && !_.isNil(value)) {
@@ -204,20 +212,14 @@ export default class MenqueryParam {
       let parser = this.handlers.parsers[option]
       if (_.isFunction(parser)) {
         if (_.isArray(value)) {
-          value = value.map((v) => parser(optionValue, v, this))
+          value = value.map((v) => parser(optionValue, v, this, this.schema))
         } else {
-          value = parser(optionValue, value, this)
+          value = parser(optionValue, value, this, this.schema)
         }
       }
     })
 
-    if (operator === '$eq' || _.isRegExp(value)) {
-      query[path] = value
-    } else {
-      query[path] = {[operator]: value}
-    }
-
-    return query
+    return this.options.parse(value, path, operator, this, this.schema)
   }
 
   /**
@@ -230,11 +232,7 @@ export default class MenqueryParam {
     let options = this.options
 
     if (arguments.length === 0) {
-      if (_.isArray(this._value)) {
-        return this._value.map((v) => options.get(v))
-      } else {
-        return options.get(this._value, this)
-      }
+      return this._value
     }
 
     if (options.multiple) {
@@ -274,7 +272,7 @@ export default class MenqueryParam {
       }
     }
 
-    value = options.set(value, this)
+    value = options.format(value, this, this.schema)
 
     if (bind) {
       this._value = value
@@ -307,10 +305,18 @@ export default class MenqueryParam {
     }
 
     for (let option in this.options) {
-      let validator = this.handlers.validators[option]
-      if (!_.isFunction(validator)) continue
       let optionValue = this.options[option]
-      let validation = validator(optionValue, value, this)
+      let validator
+
+      if (option === 'validate' && _.isFunction(optionValue)) {
+        validator = optionValue
+      } else if (_.isFunction(this.handlers.validators[option])) {
+        validator = this.handlers.validators[option].bind(this, optionValue)
+      } else {
+        continue
+      }
+
+      let validation = validator(value, this, this.schema)
 
       if (!validation.valid) {
         error = _.assign({

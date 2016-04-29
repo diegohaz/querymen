@@ -27,26 +27,60 @@ export default class MenquerySchema {
       },
       select: {
         type: [String],
-        bindTo: 'select'
+        bindTo: 'select',
+        parse: (value) => {
+          let fields = _.isArray(value) ? value : [value]
+          let query = {}
+          fields.forEach((field) => {
+            if (_.isNil(field) || _.isEmpty(field)) return
+            if (field.charAt(0) === '-') {
+              query[field.slice(1)] = 0
+            } else if (field.charAt(0) === '+') {
+              query[field.slice(1)] = 1
+            } else {
+              query[field] = 1
+            }
+          })
+          return query
+        }
       },
       page: {
         type: Number,
         default: 1,
         max: 30,
         min: 1,
-        bindTo: 'cursor'
+        bindTo: 'cursor',
+        parse: (value, path, operator, param, schema) => {
+          return {skip: schema.param('limit').value() * (value - 1)}
+        }
       },
       limit: {
         type: Number,
         default: 30,
         max: 100,
         min: 1,
-        bindTo: 'cursor'
+        bindTo: 'cursor',
+        parse: (value) => ({limit: value})
       },
       sort: {
         type: [String],
         default: 'name',
-        bindTo: 'cursor'
+        bindTo: 'cursor',
+        parse: (value) => {
+          let fields = _.isArray(value) ? value : [value]
+          let sort = {}
+          fields.forEach((field) => {
+            if (_.isNil(field) || _.isEmpty(field)) return
+            if (field.charAt(0) === '-') {
+              sort[field.slice(1)] = -1
+            } else if (field.charAt(0) === '+') {
+              sort[field.slice(1)] = 1
+            } else {
+              sort[field] = 1
+            }
+          })
+          return {sort: sort}
+        }
       }
     }
 
@@ -185,7 +219,7 @@ export default class MenquerySchema {
     }
 
     options = _.assign(this._params[name], options)
-    this.params[name] = new MenqueryParam(name, value, options)
+    this.params[name] = new MenqueryParam(name, value, options, this)
 
     this._refreshHandlersInParams(undefined, {[name]: this.params[name]})
 
@@ -224,41 +258,9 @@ export default class MenquerySchema {
     })
 
     _.forIn(this.params, (param) => {
-      let value = param.value()
       let bind = param.options.bindTo
 
-      query[bind] = query[bind] || {}
-
-      if (param.name === 'sort') {
-        let fields = _.isArray(value) ? value : [value]
-        query[bind].sort = {}
-        for (let i = 0; i < fields.length; i++) {
-          let field = fields[i]
-          if (field.charAt(0) === '-') {
-            query[bind].sort[field.slice(1)] = -1
-          } else if (field.charAt(0) === '+') {
-            query[bind].sort[field.slice(1)] = 1
-          } else {
-            query[bind].sort[field] = 1
-          }
-        }
-      } else if (param.name === 'select') {
-        let values = _.isArray(value) ? value : [value]
-        values.forEach((value) => {
-          if (value) {
-            query.select[value] = 1
-          }
-        })
-        if (_.isEmpty(query.select)) {
-          query.select = null
-        }
-      } else if (param.name === 'limit') {
-        query[bind].limit = value
-      } else if (param.name === 'page') {
-        query[bind].skip = this.params.limit.value() * (value - 1)
-      } else {
-        query[bind] = _.assign(query[bind], param.parse())
-      }
+      query[bind] = _.assign(query[bind], param.parse())
     })
 
     return query

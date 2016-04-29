@@ -35,8 +35,7 @@ test('MenqueryParam constructor options', (t) => {
   t.equal(value('UPPER', {lowercase: true}), 'upper', 'should lowercase value')
   t.equal(value('  trim   ', {trim: false}), '  trim   ', 'should not trim value')
   t.equal(value('  trim   ', {trim: true}), 'trim', 'should trim value')
-  t.equal(value('123', {get: (value) => value + '!'}), '123!', 'should set getter value')
-  t.equal(value('123', {set: (value) => value + '!'}), '123!', 'should set setter value')
+  t.equal(value('123', {format: (value) => value + '!'}), '123!', 'should format value')
   t.end()
 })
 
@@ -51,8 +50,7 @@ test('MenqueryParam constructor options with multiple value', (t) => {
   t.same(value('UP,PU', {lowercase: true}), ['up', 'pu'], 'should lowercase value')
   t.same(value(' tr ,  rt', {trim: false}), [' tr ', '  rt'], 'should not trim value')
   t.same(value(' tr ,  rt', {trim: true}), ['tr', 'rt'], 'should trim value')
-  t.same(value('123,321', {get: (value) => value + '!'}), ['123!', '321!'], 'should set getter value')
-  t.same(value('123,321', {set: (value) => value + '!'}), ['123!', '321!'], 'should set setter value')
+  t.same(value('123,321', {format: (value) => value + '!'}), ['123!', '321!'], 'should format value')
   t.end()
 })
 
@@ -122,6 +120,8 @@ test('MenqueryParam validate', (t) => {
   t.true(validate(null, {match: /^\D+$/i}), 'should validate null value match with success')
   t.false(validate('3', {match: /^\D+$/i}), 'should validate match with error')
   t.true(validate('ab', {match: /^\D+$/i}), 'should validate match with success')
+  t.false(validate(null, {validate: (value) => ({valid: false})}), 'should validate option with error')
+  t.true(validate(null, {validate: (value) => ({valid: true})}), 'should validate option with success')
   t.false(param().validate((err) => err), 'should validate with callback')
   t.end()
 })
@@ -156,6 +156,7 @@ test('MenqueryParam parse', (t) => {
   t.same(parse(123, {operator: '$gte'}), {test: {$gte: 123}}, 'should parse $gte')
   t.same(parse(123, {operator: '$lt'}), {test: {$lt: 123}}, 'should parse $lt')
   t.same(parse(123, {operator: '$lte'}), {test: {$lte: 123}}, 'should parse $lte')
+  t.same(parse(123, {parse: (value, path, operator) => ({[path]: operator})}), {test: '$eq'}, 'should parse option')
   t.end()
 })
 
@@ -171,6 +172,7 @@ test('MenqueryParam parse $or', (t) => {
   t.same(or(123, {operator: '$gte'}), {$or: [{p1: {$gte: 123}}, {p2: {$gte: 123}}]}, 'should parse $gte')
   t.same(or(123, {operator: '$lt'}), {$or: [{p1: {$lt: 123}}, {p2: {$lt: 123}}]}, 'should parse $lt')
   t.same(or(123, {operator: '$lte'}), {$or: [{p1: {$lte: 123}}, {p2: {$lte: 123}}]}, 'should parse $lte')
+  t.same(or(123, {parse: (value, path, operator) => ({[path]: operator})}), {$or: [{p1: '$eq'}, {p2: '$eq'}]}, 'should parse option')
   t.end()
 })
 
