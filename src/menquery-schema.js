@@ -271,7 +271,7 @@ export default class MenquerySchema {
       options = {type: options}
     }
 
-    options = _.assign(this._params[name], options)
+    options = _.assign({bindTo: 'query'}, this._params[name], options)
     this.params[name] = new MenqueryParam(name, value, options, this)
 
     this._refreshHandlersInParams(undefined, {[name]: this.params[name]})
