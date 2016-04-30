@@ -1,10 +1,9 @@
 /** @module menquery */
 import _ from 'lodash'
-import MenqueryParam from './menquery-param'
-import MenquerySchema from './menquery-schema'
+import Param from './menquery-param'
+import Schema from './menquery-schema'
 
-export {MenqueryParam as Param}
-export {MenquerySchema as Schema}
+export {Param, Schema}
 
 export let handlers = {
   parsers: {},
@@ -69,13 +68,13 @@ export function validator (name, fn) {
  */
 export function middleware (schema, options) {
   return function (req, res, next) {
-    let _schema = schema instanceof MenquerySchema
+    let _schema = schema instanceof Schema
                 ? _.clone(schema)
-                : new MenquerySchema(schema, options)
+                : new Schema(schema, options)
 
     _schema.validate(req.query, (err) => {
       if (err) {
-        res.status(400)
+        req.menquery = {error: err}
         return next(err)
       }
 
@@ -86,4 +85,19 @@ export function middleware (schema, options) {
   }
 }
 
-export default {handler, parser, formatter, validator, middleware}
+/**
+ * Error handler middleware.
+ * @memberof menquery
+ * @return {Function} The middleware.
+ */
+export function errorHandler () {
+  return function (err, req, res, next) {
+    if (req.menquery && req.menquery.error) {
+      res.status(400).json(req.menquery.error)
+    } else {
+      next(err)
+    }
+  }
+}
+
+export default {Schema, Param, handlers, handler, parser, formatter, validator, middleware, errorHandler}

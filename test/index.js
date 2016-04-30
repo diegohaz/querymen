@@ -2,7 +2,7 @@ import request from 'supertest'
 import express from 'express'
 import mongoose from 'mongoose'
 import test from 'tape'
-import * as menquery from '../src'
+import menquery from '../src'
 import './menquery-param'
 import './menquery-schema'
 
@@ -20,15 +20,15 @@ let Test = mongoose.model('Test', schema)
 
 let route = (...args) => {
   let app = express()
-  app.get('/tests', menquery.middleware(...args), (err, req, res, next) => {
-    return err ? res.json(err) : next()
-  }, (req, res) => {
+  app.get('/tests', menquery.middleware(...args), (req, res) => {
     Test.find(req.menquery.query, req.menquery.select, req.menquery.cursor).then((items) => {
       res.status(200).json(items)
     }).catch((err) => {
       res.status(500).send(err)
     })
   })
+
+  app.use(menquery.errorHandler())
   return app
 }
 

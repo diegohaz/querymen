@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import * as menquery from './'
+import menquery from './'
 import MenqueryParam from './menquery-param'
 
 /**
