@@ -13,8 +13,10 @@ export default class MenquerySchema {
    * @param {Object} [options] - Options object.
    */
   constructor (params = {}, options = {}) {
-    this.options = options
     this.params = {}
+    this.options = _.assign({
+      near: false
+    }, options)
     this.handlers = {
       parsers: {},
       formatters: {},
@@ -42,6 +44,51 @@ export default class MenquerySchema {
               query[field] = 1
             }
           })
+          return query
+        }
+      },
+      near: {
+        type: [Number],
+        maxlength: 2,
+        minlength: 2,
+        max: 90,
+        min: -90,
+        paths: ['location'],
+        geojson: true,
+        format: (value, param, schema) => {
+          if (!schema.param('min_distance')) {
+            schema.param('min_distance', null, {type: Number, min: 0, parse: () => false})
+          }
+          if (!schema.param('max_distance')) {
+            schema.param('max_distance', null, {type: Number, parse: () => false})
+          }
+          return value
+        },
+        parse: (value, path, operator, param, schema) => {
+          let query = {[path]: {$near: {}}}
+          let minDistance = schema.param('min_distance')
+          let maxDistance = schema.param('max_distance')
+          if (param.option('geojson')) {
+            query[path].$near = {$geometry: {type: 'Point', coordinates: [value[1], value[0]]}}
+            if (minDistance && minDistance.value()) {
+              query[path].$near.$minDistance = minDistance.value()
+              schema.param('min_distance', null)
+            }
+            if (maxDistance && maxDistance.value()) {
+              query[path].$near.$maxDistance = maxDistance.value()
+              schema.param('max_distance', null)
+            }
+          } else {
+            query[path].$near = [value[1], value[0]]
+            if (minDistance && minDistance.value()) {
+              query[path].$minDistance = minDistance.value() / 6371000
+              schema.param('min_distance', null)
+            }
+            if (maxDistance && maxDistance.value()) {
+              query[path].$maxDistance = maxDistance.value() / 6371000
+              schema.param('max_distance', null)
+            }
+          }
           return query
         }
       },
@@ -318,7 +365,7 @@ export default class MenquerySchema {
   }
 
   _getQueryParamName (paramName) {
-    return this.options[paramName] || paramName
+    return _.isString(this.options[paramName]) ? this.options[paramName] : paramName
   }
 
 }

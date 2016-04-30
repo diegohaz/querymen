@@ -136,5 +136,45 @@ test('MenquerySchema default parse', (t) => {
   t.same(parse({sort: '-a'}).cursor.sort, {a: -1}, 'should parse sort')
   t.same(parse({sort: '-a,b,+c'}).cursor.sort, {a: -1, b: 1, c: 1}, 'should parse multiple sort')
   t.same(schema({distance: 0}).parse({distance: 23}).query.distance, 23, 'should parse any')
+
+  let near = (params, values) => schema(params, {near: true}).parse(values).query
+
+  t.false(parse({near: '-22.84377,-44.3213214'}).query.location, 'should not enable near param by default')
+
+  t.same(
+    near({}, {near: '-22.84377,-44.3213214'}).location,
+    {$near: {$geometry: {type: 'Point', coordinates: [-44.3213214, -22.84377]}}},
+    'should parse near')
+
+  t.same(
+    near({}, {near: '-22.84377,-44.3213214', min_distance: 56}).location,
+    {$near: {$geometry: {type: 'Point', coordinates: [-44.3213214, -22.84377]}, $minDistance: 56}},
+    'should parse near min_distance')
+
+  t.same(
+    near({}, {near: '-22.84377,-44.3213214', max_distance: 56}).location,
+    {$near: {$geometry: {type: 'Point', coordinates: [-44.3213214, -22.84377]}, $maxDistance: 56}},
+    'should parse near max_distance')
+
+  t.false(near({}, {min_distance: 56}).min_distance, 'should not parse min_distance')
+  t.false(near({}, {max_distance: 56}).max_distance, 'should not parse max_distance')
+  t.false(near({}, {near: '-22.84377,-44.3213214', min_distance: 56}).min_distance, 'should not parse min_distance')
+  t.false(near({}, {near: '-22.84377,-44.3213214', max_distance: 56}).max_distance, 'should not parse max_distance')
+
+  t.same(
+    near({near: {geojson: false}}, {near: '-22.84377,-44.3213214'}).location,
+    {$near: [-44.3213214, -22.84377]},
+    'should parse near no geojson')
+
+  t.same(
+    near({near: {geojson: false}}, {near: '-22.84377,-44.3213214', min_distance: 56}).location,
+    {$near: [-44.3213214, -22.84377], $minDistance: 56 / 6371000},
+    'should parse near min_distance no geojson')
+
+  t.same(
+    near({near: {geojson: false}}, {near: '-22.84377,-44.3213214', max_distance: 56}).location,
+    {$near: [-44.3213214, -22.84377], $maxDistance: 56 / 6371000},
+    'should parse near max_distance no geojson')
+
   t.end()
 })
