@@ -99,15 +99,33 @@ export default class MenqueryParam {
       message: `${param.name} must be lower than or equal to ${max}`
     }))
 
-    this.validator('minlength', (minlength, value, param) => ({
-      valid: !_.isNumber(minlength) || _.isNil(value) || value.length >= minlength,
-      message: `${param.name} must have length greater than or equal to ${minlength}`
-    }))
+    this.validator('minlength', (minlength, value, param) => {
+      let valid = true
+      if (_.isNumber(minlength) && !_.isNil(value)) {
+        if (param.option('multiple')) {
+          value = _.isArray(param.value()) ? param.value() : [param.value()]
+        }
+        valid = value.length >= minlength
+      }
+      return {
+        valid: valid,
+        message: `${param.name} must have length greater than or equal to ${minlength}`
+      }
+    })
 
-    this.validator('maxlength', (maxlength, value, param) => ({
-      valid: !_.isNumber(maxlength) || _.isNil(value) || value.length <= maxlength,
-      message: `${param.name} must have length lower than or equal to ${maxlength}`
-    }))
+    this.validator('maxlength', (maxlength, value, param) => {
+      let valid = true
+      if (_.isNumber(maxlength) && !_.isNil(value)) {
+        if (param.option('multiple')) {
+          value = _.isArray(param.value()) ? param.value() : [param.value()]
+        }
+        valid = value.length <= maxlength
+      }
+      return {
+        valid: valid,
+        message: `${param.name} must have length lower than or equal to ${maxlength}`
+      }
+    })
 
     this.validator('enum', (_enum, value, param) => ({
       valid: !_.isArray(_enum) || _.isNil(value) || ~_enum.indexOf(value),
