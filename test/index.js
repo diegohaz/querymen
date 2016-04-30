@@ -45,6 +45,16 @@ test('Menquery handler', (t) => {
   t.ok(menquery.formatter('testFormatter'), 'should get formatter')
   t.ok(menquery.validator('testValidator'), 'should get validator')
 
+  let schema = new menquery.Schema({test: String})
+
+  t.ok(schema.parser('testParser'), 'should get parser in schema')
+  t.ok(schema.formatter('testFormatter'), 'should get formatter in schema')
+  t.ok(schema.validator('testValidator'), 'should get validator in schema')
+
+  t.ok(schema.param('test').parser('testParser'), 'should get parser in param')
+  t.ok(schema.param('test').formatter('testFormatter'), 'should get formatter in param')
+  t.ok(schema.param('test').validator('testValidator'), 'should get validator in param')
+
   t.end()
 })
 

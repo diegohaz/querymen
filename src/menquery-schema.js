@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import * as menquery from './'
 import MenqueryParam from './menquery-param'
 
 /**
@@ -86,6 +87,12 @@ export default class MenquerySchema {
     let keys = _.union(_.keys(this._params), _.keys(params))
 
     keys.forEach((key) => this.add(key, null, params[key]))
+
+    _.forIn(menquery.handlers, (typedHandler, type) => {
+      _.forIn(typedHandler, (handler, name) => {
+        this.handler(type, name, handler)
+      })
+    })
   }
 
   /**

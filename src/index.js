@@ -3,47 +3,14 @@ import _ from 'lodash'
 import MenqueryParam from './menquery-param'
 import MenquerySchema from './menquery-schema'
 
-/**
- * Validator object.
- * @typedef {Object} Validator
- * @property {boolean} valid - Indicates if the value is valid or not.
- * @property {string} message - The error message.
- * @property {string} [param] - The name of the param.
- * @property {*} [value] - The value of the param.
- */
-/**
- * Param parser callback.
- * @callback parserFn
- * @param {*} parserValue - The value passed to the parser.
- * @param {*} paramValue - The value passed to the param.
- * @param {MenqueryParam} param - The `MenqueryParam` object.
- * @return {*} The parsed value
- */
-/**
- * Param formatter callback.
- * @callback formatterFn
- * @param {*} formatterValue - The value passed to the formatter.
- * @param {*} paramValue - The value passed to the param.
- * @param {MenqueryParam} param - The `MenqueryParam` object.
- * @return {*} The formatted value
- */
-/**
- * Param validator callback.
- * @callback validatorFn
- * @param {*} validatorValue - The value passed to the validator.
- * @param {*} paramValue - The value passed to the param.
- * @param {MenqueryParam} param - The `MenqueryParam` object.
- * @return {Validator}
- */
+export {MenqueryParam as Param}
+export {MenquerySchema as Schema}
 
-let handlers = {
+export let handlers = {
   parsers: {},
   formatters: {},
   validators: {}
 }
-
-export {MenqueryParam as Param}
-export {MenquerySchema as Schema}
 
 /**
  * Get or set a handler.
@@ -106,12 +73,6 @@ export function middleware (schema, options) {
                 ? _.clone(schema)
                 : new MenquerySchema(schema, options)
 
-    _.forIn(handlers, (typedHandler, type) => {
-      _.forIn(typedHandler, (handler, name) => {
-        _schema.handler(type, name, handler)
-      })
-    })
-
     _schema.validate(req.query, (err) => {
       if (err) {
         res.status(400)
@@ -119,6 +80,7 @@ export function middleware (schema, options) {
       }
 
       req.menquery = _schema.parse()
+      req.menquery.schema = _schema
       next()
     })
   }
