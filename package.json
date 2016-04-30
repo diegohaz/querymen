@@ -1,6 +1,6 @@
 {
   "name": "menquery",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Querystring parser middleware for MongoDB, Express and Nodejs",
   "main": "dist/index.js",
   "files": [
