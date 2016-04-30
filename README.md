@@ -18,20 +18,68 @@ npm install --save menquery
 ## Examples
 
 ### Pagination
+Menquery has a default schema to handle pagination. This is the most simple and common usage.
 ```js
 var menquery = require('menquery');
 
 app.get('/posts', menquery.middleware(), function(req, res) {
-  // user requests /posts?page=2&limit=20&sort=-createdAt
-  // req.options is {limit: 20, skip: 20, sort: {createdAt: -1}}
+  var query = req.menquery;
 
-  Post.find({}, null, req.options).then(function(posts) {
-    // posts have up to 20 items of the second page sorted by `createdAt` field
+  Post.find(query.query, query.select, query.cursor).then(function(posts) {
+    // posts are proper paginated here
   });
 });
 ```
+User requests `/posts?page=2&limit=20&sort=-createdAt` req.menquery will be:
+```js
+req.menquery = {
+  query: {},
+  select: {},
+  cursor: {
+    limit: 20, 
+    skip: 20, 
+    sort: {createdAt: -1}
+  }
+}
+```
+User requests `/posts?q=term&select=title,desc` req.menquery will be:
+```js
+req.menquery = {
+  query: {
+    keywords: /term/i
+  },
+  select: {
+    title: 1,
+    desc: 1
+  },
+  cursor: {
+    // defaults
+    limit: 30, 
+    skip: 0, 
+    sort: {name: 1}
+  }
+}
+```
+User requests `/posts?select=-title&sort=name,-createdAt` req.menquery will be:
+```js
+req.menquery = {
+  query: {},
+  select: {
+    title: 0
+  },
+  cursor: {
+    limit: 30, 
+    skip: 0, 
+    sort: {
+      name: 1,
+      createdAt: -1
+    }
+  }
+}
+```
 
 ### Custom schema
+You can define a custom schema, which will be merged into menquery default schema (explained above).
 ```js
 var menquery = require('menquery');
 
@@ -42,29 +90,40 @@ app.get('/posts', menquery.middleware({
     operator: '$gte'
   }
 }), function(req, res) {
-  // user requests /posts?after=2016-04-23
-  // req.options is default {limit: 30, skip: 0, sort: {name: 1}}
-  // req.filter is {createdAt: {$gte: 1461369600000}}
-
-  Post.find(req.filter).then(function(posts) {
-    // posts have only items with `createdAt` after date 2016-04-23
+  Post.find(req.menquery.query).then(function(posts) {
+    // ...
   });
 });
 ```
+User requests `/posts?after=2016-04-23` req.menquery will be:
+```js
+req.menquery = {
+  query: {
+    createdAt: {$gte: 1461369600000}
+  },
+  select: {},
+  cursor: {
+    // defaults
+    limit: 30, 
+    skip: 0, 
+    sort: {name: 1}
+  }
+}
+```
 
 ### Reusable schemas
+You can create reusable schemas as well. Just instantiate a `menquery.Schema` object.
 ```js
 var menquery = require('menquery');
 
 var schema = new menquery.Schema({
   tags: {
-    type: String,
-    multiple: true
+    type: [String],
   }
 });
 
 // user requests /posts?tags=world,travel
-// req.filter is {tags: {$in: ['world', 'travel']}}
+// req.menquery.query is {tags: {$in: ['world', 'travel']}}
 app.get('/posts', menquery.middleware(schema));
 app.get('/articles', menquery.middleware(schema));
 ```
@@ -79,7 +138,7 @@ var schema = new menquery.Schema({
   term: {
     type: RegExp,
     paths: ['title', 'description'],
-    bindTo: 'search' // default was 'filter'
+    bindTo: 'search' // default was 'query'
   },
   with_picture: {
     type: Boolean,
@@ -87,15 +146,15 @@ var schema = new menquery.Schema({
     operator: '$exists'
   }
 }, {
-  page: false, // disallow default parameter `page`
+  page: false, // disable default parameter `page`
   limit: 'max_items' // change name of default parameter `limit` to `max_items`
 });
 
 app.get('/posts', menquery.middleware(schema), function(req, res) {
   // user requests /posts?term=awesome&with_picture=true&active=true&max_items=100
-  // req.filter is {picture: {$exists: true}, active: true}
-  // req.options is {limit: 100, sort: {createdAt: -1}}
-  // req.search is {$or: [{title: /awesome/i}, {description: /awesome/i}]}
+  // req.menquery.query is {picture: {$exists: true}, active: true}
+  // req.menquery.cursor is {limit: 100, sort: {createdAt: -1}}
+  // req.menquery.search is {$or: [{title: /awesome/i}, {description: /awesome/i}]}
 });
 ```
 
@@ -129,9 +188,9 @@ schema.param('text', 'helps');
 console.log(schema.validate()); // true
 console.log(schema.param('text').value()); // HELPS!!!!!!!
 
-schema.parser('elemMatch', function(elemMatch, value, param) {
+schema.parser('elemMatch', function(elemMatch, value, path, operator) {
   if (elemMatch) {
-    value = {$elemMatch: {[elemMatch]: value}};
+    value = {[path]: {$elemMatch: {[elemMatch]: {[operator]: value}}}};
   }
   return value;
 });
@@ -140,7 +199,7 @@ schema.param('text', 'ivegotcontrols');
 console.log(schema.param('text').parse()); // {text: 'IVEGOTCONTROLS!!!!!!!'}
 
 schema.param('text').option('elemMatch', 'prop');
-console.log(schema.param('text').parse()); // {text: {$elemMatch: {prop: 'IVEGOTCONTROLS!!!!!!!'}}}
+console.log(schema.param('text').parse()); // {text: {$elemMatch: {prop: {$eq: 'IVEGOTCONTROLS!!!!!!!'}}}}
 ```
 
 ### Error handling
@@ -171,106 +230,6 @@ Response body will look like:
   "message": "category must be one of: culture, general, travel"
 }
 ```
-
-## Reference
-
-### MenquerySchema
-
-#### Default schema
-
-Every instance of MenquerySchema has some parameters set by default:
-
-```js
-q: {
-  type: String,
-  normalize: true,
-  regex: true,
-  paths: ['_q']
-},
-page: {
-  type: Number,
-  default: 1,
-  max: 30,
-  min: 1,
-  bindTo: 'options'
-},
-limit: {
-  type: Number,
-  default: 30,
-  max: 100,
-  min: 1,
-  bindTo: 'options'
-},
-sort: {
-  type: String,
-  default: 'name',
-  multiple: true,
-  bindTo: 'options'
-}
-```
-
-#### Parse
-
-`menquery()` middleware automatically call this method with `req.query` as argument, but you can also use this if you have a MenquerySchema object:
-```js
-var schema = new menquery.Schema({q: {paths: ['name']}});
-var query = schema.parse({q: 'text', page: 3, limit: 20, sort: '-createdAt'});
-
-console.log(query);
-// {filter: {name: /text/i}, options: {limit: 20, skip: 40, sort: {createdAt: -1}}}
-
-Post.find(query.filter, null, query.options)
-```
-
-#### Validate
-
-`menquery()` middleware automatically call this method with `req.query` as argument (and call `next(err)` passing the error to the next middleware), but you can also use this if you have a MenquerySchema object:
-```js
-var schema1 = new menquery.Schema({page: {max: 10}});
-var schema2 = new menquery.Schema({page: {max: 100}});
-var query = {page: 50};
-
-schema1.validate(query); // false
-schema2.validate(query); // true
-
-// With callback
-schema1.validate(query, function(err) {
-  console.log(err);
-  /* {
-    param: 'page',
-    value: 50,
-    name: 'max',
-    max: 10,
-    message: 'page must be lower than or equal to 10'
-  } */
-});
-```
-
-### MenqueryParam
-
-#### Default param options
-
-| Option    | Type      | Default     | Description |
-|-----------|-----------|-------------|-------------|
-| type      | Built in  | `String`    | Parameter type.
-| paths     | Built in  | `['foo']`   | MongoDB collection field which the parameter will be parsed to e.g. `{foo: 'bar,baz'}`. If more than one path was set, it will be parsed as `{$or: [{foo1: 'bar,baz'}, {foo2: 'bar,baz'}]}`.
-| bindTo    | Built in  | `'filter'`  | Which property the parameter will be parsed to e.g. `{filter: {foo: 'bar,baz'}}`. Useful to group different types of parameters.
-| multiple  | Built in  | `false`     | If it's true, parameter will be parsed looking for `separator` to split content e.g. `/posts?foo=bar,baz` will be `{foo: {$in: ['bar', 'baz']}}`.
-| separator | Built in  | `','`       | Separator used in multiple option (see above).
-| operator  | Built in  | `'$eq'`     | MongoDB query operator. If `multiple` is true and it finds `separator` in value, `$eq` becomes `$in`, and `$ne` becomes `$nin`.
-| set       | Built in  | `'bar,baz'` | Called when set parameter value with two arguments (value, menqueryParam). Must return a value.
-| get       | Built in  | `'bar,baz'` | Called when get parameter value with two arguments (value, menqueryParam). Must return a value.
-| lowecase  | Formatter | `false`     | Formats `PÃO DE MEL` to `pão de mel`.
-| uppercase | Formatter | `false`     | Formats `pão de mel` to `PÃO DE MEL`.
-| normalize | Formatter | `false`     | Formats `Pão :dE meL!!` to `pao de mel`.
-| trim      | Formatter | `true`      | Formats ` pão de mel   ` to `pão de mel`.
-| minlength | Validator | `false`     | Validates value length.
-| maxlength | Validator | `false`     | Validates value length.
-| required  | Validator | `false`     | Validates if value is present.
-| match     | Validator | `false`     | Validates if value matches some regex. 
-| enum      | Validator | `false`     | Validates if value is present in enum array.
-| min       | Validator | `false`     | Validates value number.
-| max       | Validator | `false`     | Validates value number.
 
 ## Contributing
 
