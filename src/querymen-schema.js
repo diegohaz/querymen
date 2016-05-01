@@ -51,8 +51,8 @@ export default class QuerymenSchema {
         type: [Number],
         maxlength: 2,
         minlength: 2,
-        max: 90,
-        min: -90,
+        max: 180,
+        min: -180,
         paths: ['location'],
         geojson: true,
         format: (value, param, schema) => {
