@@ -29,7 +29,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/diegohaz/menquery.git"
+    "url": "git+https://github.com/diegohaz/querymen.git"
   },
   "keywords": [
     "mongo",
@@ -37,14 +37,17 @@
     "node",
     "query",
     "querystring",
-    "param"
+    "param",
+    "mongodb",
+    "expressjs",
+    "nodejs"
   ],
   "author": "Diego Haz <hazdiego@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/diegohaz/menquery/issues"
+    "url": "https://github.com/diegohaz/querymen/issues"
   },
-  "homepage": "https://github.com/diegohaz/menquery#readme",
+  "homepage": "https://github.com/diegohaz/querymen#readme",
   "devDependencies": {
     "babel-cli": "^6.7.5",
     "babel-core": "^6.7.6",

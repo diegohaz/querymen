@@ -13,6 +13,10 @@ let schema = mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  location: {
+    type: [Number],
+    index: '2d'
   }
 })
 
@@ -59,14 +63,14 @@ test('Querymen handler', (t) => {
 })
 
 test('Querymen middleware', (t) => {
-  t.plan(8)
+  t.plan(9)
 
   Test.remove({}).then(() => {
     return Test.create(
-      {title: 'Test', createdAt: new Date('2016-04-25T10:05')},
-      {title: 'Example', createdAt: new Date('2016-04-24T10:05')},
-      {title: 'Spaced test', createdAt: new Date('2016-04-23T10:05')},
-      {title: 'nice!', createdAt: new Date('2016-04-22T10:05')}
+      {title: 'Test', createdAt: new Date('2016-04-25T10:05'), location: [-44.1, -22.0]},
+      {title: 'Example', createdAt: new Date('2016-04-24T10:05'), location: [-44.3, -22.0]},
+      {title: 'Spaced test', createdAt: new Date('2016-04-23T10:05'), location: [-44.2, -22.0]},
+      {title: 'nice!', createdAt: new Date('2016-04-22T10:05'), location: [-44.4, -22.0]}
     )
   }).then(() => {
     let app = route()
@@ -114,6 +118,19 @@ test('Querymen middleware', (t) => {
         if (err) throw err
         t.equal(res.body.length, 1, 'should respond with 1 item')
         t.equal(res.body[0].title, 'Test', 'should respond with item after date')
+      })
+
+    request(route(new querymen.Schema({
+      near: {
+        geojson: false
+      }
+    }, {near: true})))
+      .get('/tests')
+      .query({near: '-22.0,-44.0'})
+      .expect(200)
+      .end((err, res) => {
+        if (err) throw err
+        t.equal(res.body[1].title, 'Spaced test', 'should respond with item near')
       })
   })
 })

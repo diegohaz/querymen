@@ -216,9 +216,13 @@ var schema = new querymen.Schema({
 
 app.get('/posts', querymen.middleware(schema));
 
+// create your own handler
 app.use(function(err, req, res, next) {
   res.status(400).json(err);
 });
+
+// or use querymen error handler
+app.use(querymen.errorHandler())
 ```
 Response body will look like:
 ```json

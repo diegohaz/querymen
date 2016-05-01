@@ -89,6 +89,7 @@ export default class QuerymenSchema {
               schema.param('max_distance', null)
             }
           }
+          schema.option('sort', false)
           return query
         }
       },
@@ -311,6 +312,7 @@ export default class QuerymenSchema {
     })
 
     _.forIn(this.params, (param) => {
+      if (this.options[this._getSchemaParamName(param.name)] === false) return
       let bind = param.options.bindTo
 
       query[bind] = _.assign(query[bind], param.parse())
