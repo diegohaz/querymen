@@ -258,19 +258,7 @@ export default class QuerymenSchema {
       return false
     }
 
-    if (_.isString(options)) {
-      options = {default: options}
-    } else if (_.isNumber(options)) {
-      options = {type: Number, default: options}
-    } else if (_.isBoolean(options)) {
-      options = {type: Boolean, default: options}
-    } else if (_.isDate(options)) {
-      options = {type: Date, default: options}
-    } else if (_.isRegExp(options)) {
-      options = {type: RegExp, default: options}
-    } else if (_.isFunction(options)) {
-      options = {type: options}
-    }
+    options = this._parseParamOptions(options)
 
     options = _.assign({bindTo: 'query'}, this._params[name], options)
     this.params[name] = new QuerymenParam(name, value, options, this)
@@ -368,6 +356,33 @@ export default class QuerymenSchema {
 
   _getQueryParamName (paramName) {
     return _.isString(this.options[paramName]) ? this.options[paramName] : paramName
+  }
+
+  _parseParamOptions (options) {
+    if (_.isArray(options) && options.length) {
+      let innerOption = this._parseParamOptions(options[0])
+      options = {}
+      if (innerOption.type) {
+        options.type = [innerOption.type]
+      }
+      if (innerOption.default) {
+        options.default = innerOption.default
+      }
+    } else if (_.isString(options)) {
+      options = {default: options}
+    } else if (_.isNumber(options)) {
+      options = {type: Number, default: options}
+    } else if (_.isBoolean(options)) {
+      options = {type: Boolean, default: options}
+    } else if (_.isDate(options)) {
+      options = {type: Date, default: options}
+    } else if (_.isRegExp(options)) {
+      options = {type: RegExp, default: options}
+    } else if (_.isFunction(options)) {
+      options = {type: options}
+    }
+
+    return options || {}
   }
 
 }

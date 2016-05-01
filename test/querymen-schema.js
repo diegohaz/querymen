@@ -19,6 +19,17 @@ test('QuerymenSchema add', (t) => {
   t.equal(add('123', Boolean), true, 'should add a param with type option boolean')
   t.same(add('2016', Date), new Date('2016'), 'should add a param with type option date')
   t.same(add('123', RegExp), /123/i, 'should add a param with type option regexp')
+
+  t.same(add(null, ['123']), '123', 'should add a param with default option string array')
+  t.same(add(null, [123]), 123, 'should add a param with default option number array')
+  t.same(add(null, [true]), true, 'should add a param with default option boolean array')
+  t.same(add(null, [new Date('2016')]), new Date('2016'), 'should add a param with default option date array')
+  t.same(add(null, [/123/i]), /123/i, 'should add a param with default option regexp array')
+  t.same(add(123, [String]), '123', 'should add a param with type option string array')
+  t.same(add('123,456', [Number]), [123, 456], 'should add a param with type option number array')
+  t.same(add('123,0', [Boolean]), [true, false], 'should add a param with type option boolean array')
+  t.same(add('2016,2017', [Date]), [new Date('2016'), new Date('2017')], 'should add a param with type option date array')
+  t.same(add('123,456', [RegExp]), [/123/i, /123/i], 'should add a param with type option regexp array')
   t.end()
 })
 
