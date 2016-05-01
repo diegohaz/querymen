@@ -1,4 +1,4 @@
-# Menquery
+# Querymen
 
 [![JS Standard Style][standard-image]][standard-url]
 [![NPM version][npm-image]][npm-url]
@@ -12,27 +12,27 @@
 ## Install
 
 ```sh
-npm install --save menquery
+npm install --save querymen
 ```
 
 ## Examples
 
 ### Pagination
-Menquery has a default schema to handle pagination. This is the most simple and common usage.
+Querymen has a default schema to handle pagination. This is the most simple and common usage.
 ```js
-var menquery = require('menquery');
+var querymen = require('querymen');
 
-app.get('/posts', menquery.middleware(), function(req, res) {
-  var query = req.menquery;
+app.get('/posts', querymen.middleware(), function(req, res) {
+  var query = req.querymen;
 
   Post.find(query.query, query.select, query.cursor).then(function(posts) {
     // posts are proper paginated here
   });
 });
 ```
-User requests `/posts?page=2&limit=20&sort=-createdAt` req.menquery will be:
+User requests `/posts?page=2&limit=20&sort=-createdAt` req.querymen will be:
 ```js
-req.menquery = {
+req.querymen = {
   query: {},
   select: {},
   cursor: {
@@ -42,9 +42,9 @@ req.menquery = {
   }
 }
 ```
-User requests `/posts?q=term&select=title,desc` req.menquery will be:
+User requests `/posts?q=term&select=title,desc` req.querymen will be:
 ```js
-req.menquery = {
+req.querymen = {
   query: {
     keywords: /term/i
   },
@@ -60,9 +60,9 @@ req.menquery = {
   }
 }
 ```
-User requests `/posts?select=-title&sort=name,-createdAt` req.menquery will be:
+User requests `/posts?select=-title&sort=name,-createdAt` req.querymen will be:
 ```js
-req.menquery = {
+req.querymen = {
   query: {},
   select: {
     title: 0
@@ -79,25 +79,25 @@ req.menquery = {
 ```
 
 ### Custom schema
-You can define a custom schema, which will be merged into menquery default schema (explained above).
+You can define a custom schema, which will be merged into querymen default schema (explained above).
 ```js
-var menquery = require('menquery');
+var querymen = require('querymen');
 
-app.get('/posts', menquery.middleware({
+app.get('/posts', querymen.middleware({
   after: {
     type: Date,
     paths: ['createdAt']
     operator: '$gte'
   }
 }), function(req, res) {
-  Post.find(req.menquery.query).then(function(posts) {
+  Post.find(req.querymen.query).then(function(posts) {
     // ...
   });
 });
 ```
-User requests `/posts?after=2016-04-23` req.menquery will be:
+User requests `/posts?after=2016-04-23` req.querymen will be:
 ```js
-req.menquery = {
+req.querymen = {
   query: {
     createdAt: {$gte: 1461369600000}
   },
@@ -112,27 +112,27 @@ req.menquery = {
 ```
 
 ### Reusable schemas
-You can create reusable schemas as well. Just instantiate a `menquery.Schema` object.
+You can create reusable schemas as well. Just instantiate a `querymen.Schema` object.
 ```js
-var menquery = require('menquery');
+var querymen = require('querymen');
 
-var schema = new menquery.Schema({
+var schema = new querymen.Schema({
   tags: {
     type: [String],
   }
 });
 
 // user requests /posts?tags=world,travel
-// req.menquery.query is {tags: {$in: ['world', 'travel']}}
-app.get('/posts', menquery.middleware(schema));
-app.get('/articles', menquery.middleware(schema));
+// req.querymen.query is {tags: {$in: ['world', 'travel']}}
+app.get('/posts', querymen.middleware(schema));
+app.get('/articles', querymen.middleware(schema));
 ```
 
 ### Advanced schema
 ```js
-var menquery = require('menquery');
+var querymen = require('querymen');
 
-var schema = new menquery.Schema({
+var schema = new querymen.Schema({
   active: Boolean, // shorthand to {type: Boolean}
   sort: '-createdAt', // shorthand to {type: String, default: '-createdAt'}
   term: {
@@ -150,18 +150,18 @@ var schema = new menquery.Schema({
   limit: 'max_items' // change name of default parameter `limit` to `max_items`
 });
 
-app.get('/posts', menquery.middleware(schema), function(req, res) {
+app.get('/posts', querymen.middleware(schema), function(req, res) {
   // user requests /posts?term=awesome&with_picture=true&active=true&max_items=100
-  // req.menquery.query is {picture: {$exists: true}, active: true}
-  // req.menquery.cursor is {limit: 100, sort: {createdAt: -1}}
-  // req.menquery.search is {$or: [{title: /awesome/i}, {description: /awesome/i}]}
+  // req.querymen.query is {picture: {$exists: true}, active: true}
+  // req.querymen.cursor is {limit: 100, sort: {createdAt: -1}}
+  // req.querymen.search is {$or: [{title: /awesome/i}, {description: /awesome/i}]}
 });
 ```
 
 ### Dynamic advanced schema
 ```js
-var menquery = require('menquery');
-var schema = new menquery.Schema();
+var querymen = require('querymen');
+var schema = new querymen.Schema();
 
 schema.formatter('scream', function(scream, value, param) {
   if (scream) {
@@ -205,16 +205,16 @@ console.log(schema.param('text').parse()); // {text: {$elemMatch: {prop: {$eq: '
 ### Error handling
 ```js
 // user requests /posts?category=world
-var menquery = require('menquery');
+var querymen = require('querymen');
 
-var schema = new menquery.Schema({
+var schema = new querymen.Schema({
   category: {
     type: String,
     enum: ['culture', 'general', 'travel']
   }
 });
 
-app.get('/posts', menquery.middleware(schema));
+app.get('/posts', querymen.middleware(schema));
 
 app.use(function(err, req, res, next) {
   res.status(400).json(err);
@@ -242,16 +242,16 @@ MIT © [Diego Haz](http://github.com/diegohaz)
 [standard-url]: http://standardjs.com
 [standard-image]: https://img.shields.io/badge/code%20style-standard-brightgreen.svg
 
-[npm-url]: https://npmjs.org/package/menquery
-[npm-image]: https://img.shields.io/npm/v/menquery.svg?style=flat-square
+[npm-url]: https://npmjs.org/package/querymen
+[npm-image]: https://img.shields.io/npm/v/querymen.svg?style=flat-square
 
-[travis-url]: https://travis-ci.org/diegohaz/menquery
-[travis-image]: https://img.shields.io/travis/diegohaz/menquery.svg?style=flat-square
+[travis-url]: https://travis-ci.org/diegohaz/querymen
+[travis-image]: https://img.shields.io/travis/diegohaz/querymen.svg?style=flat-square
 
-[coveralls-url]: https://coveralls.io/r/diegohaz/menquery
-[coveralls-image]: https://img.shields.io/coveralls/diegohaz/menquery.svg?style=flat-square
+[coveralls-url]: https://coveralls.io/r/diegohaz/querymen
+[coveralls-image]: https://img.shields.io/coveralls/diegohaz/querymen.svg?style=flat-square
 
-[depstat-url]: https://david-dm.org/diegohaz/menquery
-[depstat-image]: https://david-dm.org/diegohaz/menquery.svg?style=flat-square
+[depstat-url]: https://david-dm.org/diegohaz/querymen
+[depstat-image]: https://david-dm.org/diegohaz/querymen.svg?style=flat-square
 
-[download-badge]: http://img.shields.io/npm/dm/menquery.svg?style=flat-square
+[download-badge]: http://img.shields.io/npm/dm/querymen.svg?style=flat-square

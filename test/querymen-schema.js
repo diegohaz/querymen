@@ -3,7 +3,7 @@ import {Schema, Param} from '../src/'
 
 let schema = (params, options) => new Schema(params, options)
 
-test('MenquerySchema add', (t) => {
+test('QuerymenSchema add', (t) => {
   let add = (...args) => schema().add('test', ...args).value()
   t.true(schema().add(new Param('test')), 'should add a param with instance')
   t.true(schema().add('test'), 'should add a param')
@@ -22,7 +22,7 @@ test('MenquerySchema add', (t) => {
   t.end()
 })
 
-test('MenquerySchema get', (t) => {
+test('QuerymenSchema get', (t) => {
   let mySchema = schema()
   mySchema.add('test')
   t.false(schema().get('test'), 'should not get a nonexistent param')
@@ -30,7 +30,7 @@ test('MenquerySchema get', (t) => {
   t.end()
 })
 
-test('MenquerySchema set', (t) => {
+test('QuerymenSchema set', (t) => {
   let mySchema = schema()
   mySchema.add('test')
   t.false(schema().set('test', '123'), 'should not set a nonexistent param')
@@ -39,7 +39,7 @@ test('MenquerySchema set', (t) => {
   t.end()
 })
 
-test('MenquerySchema option', (t) => {
+test('QuerymenSchema option', (t) => {
   let mySchema = schema()
   t.equal(mySchema.option('test', false), false, 'should set option')
   t.equal(mySchema.option('test'), false, 'should get option')
@@ -47,7 +47,7 @@ test('MenquerySchema option', (t) => {
   t.end()
 })
 
-test('MenquerySchema param', (t) => {
+test('QuerymenSchema param', (t) => {
   let mySchema = schema()
   t.false(mySchema.param('test'), 'should not get a nonexistent param')
   t.true(mySchema.param('test', null), 'should add a param')
@@ -56,7 +56,7 @@ test('MenquerySchema param', (t) => {
   t.end()
 })
 
-test('MenquerySchema formatter', (t) => {
+test('QuerymenSchema formatter', (t) => {
   let mySchema = schema({test: '123'})
   let formatter = mySchema.formatter('scream', (scream, value) => {
     return scream ? value.toUpperCase() : value
@@ -72,7 +72,7 @@ test('MenquerySchema formatter', (t) => {
   t.end()
 })
 
-test('MenquerySchema validator', (t) => {
+test('QuerymenSchema validator', (t) => {
   let mySchema = schema({test: 'help'})
   let validator = mySchema.validator('isPlural', (isPlural, value, param) => ({
     valid: !isPlural || value.toLowerCase().substr(-1) === 's',
@@ -92,7 +92,7 @@ test('MenquerySchema validator', (t) => {
   t.end()
 })
 
-test('MenquerySchema parser', (t) => {
+test('QuerymenSchema parser', (t) => {
   let mySchema = schema({test: 'help'})
   let parser = mySchema.parser('elemMatch', (elemMatch, value, path) => {
     return elemMatch ? {[path]: {$elemMatch: {[elemMatch]: value}}} : value
@@ -108,7 +108,7 @@ test('MenquerySchema parser', (t) => {
   t.end()
 })
 
-test('MenquerySchema name', (t) => {
+test('QuerymenSchema name', (t) => {
   let mySchema = schema({}, {page: 'p'})
   let name = (type, name) => mySchema[`_get${type}ParamName`](name)
   t.equal(name('Schema', 'p'), 'page', 'should get schema param name by query param name')
@@ -123,7 +123,7 @@ test('MenquerySchema name', (t) => {
   t.end()
 })
 
-test('MenquerySchema default parse', (t) => {
+test('QuerymenSchema default parse', (t) => {
   let parse = (...args) => schema().parse(...args)
   t.same(parse({q: 'testing'}).query.keywords, /testing/i, 'should parse q')
   t.same(parse().select, {}, 'should not parse undefined select')

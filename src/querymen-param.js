@@ -1,7 +1,7 @@
 import _ from 'lodash'
 
-/** MenqueryParam class. */
-export default class MenqueryParam {
+/** QuerymenParam class. */
+export default class QuerymenParam {
 
   /**
    * Create a param.

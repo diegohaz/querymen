@@ -5,7 +5,7 @@ import {Param} from '../src/'
 let param = (value, options) => new Param('test', value, options)
 let date = new Date('2016-04-24')
 
-test('MenqueryParam constructor type', (t) => {
+test('QuerymenParam constructor type', (t) => {
   let type = (value) => param(value).option('type')
   t.same(type('test'), String, 'should set type string automatically')
   t.same(type(['test']), String, 'should set type string automatically by array')
@@ -20,7 +20,7 @@ test('MenqueryParam constructor type', (t) => {
   t.end()
 })
 
-test('MenqueryParam constructor options', (t) => {
+test('QuerymenParam constructor options', (t) => {
   let value = (...args) => param(...args).value()
   t.equal(value('foo', {default: 'test'}), 'foo', 'should not set default value string')
   t.equal(value(null, {default: 'test'}), 'test', 'should set default value string')
@@ -39,7 +39,7 @@ test('MenqueryParam constructor options', (t) => {
   t.end()
 })
 
-test('MenqueryParam constructor options with multiple value', (t) => {
+test('QuerymenParam constructor options with multiple value', (t) => {
   let value = (value, options) => param(value, _.assign(options, {multiple: true})).value()
   t.same(value('foo,bar', {default: 'test'}), ['foo', 'bar'], 'should not set default value string')
   t.same(value('Bé_!, Bê!', {normalize: false}), ['Bé_!', 'Bê!'], 'should not normalize value')
@@ -54,7 +54,7 @@ test('MenqueryParam constructor options with multiple value', (t) => {
   t.end()
 })
 
-test('MenqueryParam value', (t) => {
+test('QuerymenParam value', (t) => {
   let value = (val, type) => param(val, {type: type}).value()
   let dateValue = (val) => value(val, Date)
   t.equal(value(23, String), '23', 'should convert 23 to "23"')
@@ -73,7 +73,7 @@ test('MenqueryParam value', (t) => {
   t.end()
 })
 
-test('MenqueryParam value with multiple value', (t) => {
+test('QuerymenParam value with multiple value', (t) => {
   let value = (val, type) => param(val, {type: type, multiple: true}).value()
   let dateValue = (val) => value(val, Date)
   t.same(value('23,24', String), ['23', '24'], 'should convert to string')
@@ -90,7 +90,7 @@ test('MenqueryParam value with multiple value', (t) => {
   t.end()
 })
 
-test('MenqueryParam validate', (t) => {
+test('QuerymenParam validate', (t) => {
   let validate = (...args) => param(...args).validate()
   let minDate = new Date('2016-01-01')
   let maxDate = new Date('2016-04-25')
@@ -126,7 +126,7 @@ test('MenqueryParam validate', (t) => {
   t.end()
 })
 
-test('MenqueryParam validate with multiple value', (t) => {
+test('QuerymenParam validate with multiple value', (t) => {
   let validate = (value, options) => param(value, _.assign(options, {multiple: true})).validate()
   t.false(validate('test,', {required: true}), 'should validate required with error')
   t.true(validate('test', {required: true}), 'should validate required with success')
@@ -146,7 +146,7 @@ test('MenqueryParam validate with multiple value', (t) => {
   t.end()
 })
 
-test('MenqueryParam parse', (t) => {
+test('QuerymenParam parse', (t) => {
   let parse = (...args) => param(...args).parse()
   t.same(parse(), {}, 'should parse nothing')
   t.same(parse(123), {test: 123}, 'should parse $eq as default')
@@ -161,7 +161,7 @@ test('MenqueryParam parse', (t) => {
   t.end()
 })
 
-test('MenqueryParam parse $or', (t) => {
+test('QuerymenParam parse $or', (t) => {
   let or = (value, options) => param(value, _.assign({paths: ['p1', 'p2']}, options)).parse()
   let eqMultiple = {$or: [{p1: {$in: ['1', '2']}}, {p2: {$in: ['1', '2']}}]}
   let neMultiple = {$or: [{p1: {$nin: ['1', '2']}}, {p2: {$nin: ['1', '2']}}]}
@@ -177,7 +177,7 @@ test('MenqueryParam parse $or', (t) => {
   t.end()
 })
 
-test('MenqueryParam option', (t) => {
+test('QuerymenParam option', (t) => {
   let optionParam = param()
   t.true(param().option('paths'), 'should get an option')
   t.false(param().option('test'), 'should not get a nonexistent option')
@@ -186,7 +186,7 @@ test('MenqueryParam option', (t) => {
   t.end()
 })
 
-test('MenqueryParam formatter', (t) => {
+test('QuerymenParam formatter', (t) => {
   let fParam = param()
   fParam.formatter('capitalize', (capitalize, value, param) => {
     t.equal(param.name, 'test', 'should pass param object to formatter method')
@@ -203,7 +203,7 @@ test('MenqueryParam formatter', (t) => {
   t.end()
 })
 
-test('MenqueryParam parser', (t) => {
+test('QuerymenParam parser', (t) => {
   let pParam = param(null, {multiple: true})
   pParam.parser('elemMatch', (elemMatch, value, path, operator, param, schema) => {
     t.true(path, 'should pass path to parser')
@@ -223,7 +223,7 @@ test('MenqueryParam parser', (t) => {
   t.end()
 })
 
-test('MenqueryParam validator', (t) => {
+test('QuerymenParam validator', (t) => {
   let vParam = param(null, {multiple: true})
   vParam.validator('isPlural', (isPlural, value, param) => {
     t.equal(param.name, 'test', 'should pass param object to validator method')

@@ -2,11 +2,11 @@ import request from 'supertest'
 import express from 'express'
 import mongoose from 'mongoose'
 import test from 'tape'
-import menquery from '../src'
-import './menquery-param'
-import './menquery-schema'
+import querymen from '../src'
+import './querymen-param'
+import './querymen-schema'
 
-mongoose.connect('mongodb://localhost/menquery-test')
+mongoose.connect('mongodb://localhost/querymen-test')
 
 let schema = mongoose.Schema({
   title: String,
@@ -20,32 +20,32 @@ let Test = mongoose.model('Test', schema)
 
 let route = (...args) => {
   let app = express()
-  app.get('/tests', menquery.middleware(...args), (req, res) => {
-    Test.find(req.menquery.query, req.menquery.select, req.menquery.cursor).then((items) => {
+  app.get('/tests', querymen.middleware(...args), (req, res) => {
+    Test.find(req.querymen.query, req.querymen.select, req.querymen.cursor).then((items) => {
       res.status(200).json(items)
     }).catch((err) => {
       res.status(500).send(err)
     })
   })
 
-  app.use(menquery.errorHandler())
+  app.use(querymen.errorHandler())
   return app
 }
 
-test('Menquery handler', (t) => {
-  t.notOk(menquery.parser('testParser'), 'should not get nonexistent parser')
-  t.notOk(menquery.formatter('testFormatter'), 'should not get nonexistent formatter')
-  t.notOk(menquery.validator('testValidator'), 'should not get nonexistent validator')
+test('Querymen handler', (t) => {
+  t.notOk(querymen.parser('testParser'), 'should not get nonexistent parser')
+  t.notOk(querymen.formatter('testFormatter'), 'should not get nonexistent formatter')
+  t.notOk(querymen.validator('testValidator'), 'should not get nonexistent validator')
 
-  menquery.parser('testParser', () => 'test')
-  menquery.formatter('testFormatter', () => 'test')
-  menquery.validator('testValidator', () => ({valid: false}))
+  querymen.parser('testParser', () => 'test')
+  querymen.formatter('testFormatter', () => 'test')
+  querymen.validator('testValidator', () => ({valid: false}))
 
-  t.ok(menquery.parser('testParser'), 'should get parser')
-  t.ok(menquery.formatter('testFormatter'), 'should get formatter')
-  t.ok(menquery.validator('testValidator'), 'should get validator')
+  t.ok(querymen.parser('testParser'), 'should get parser')
+  t.ok(querymen.formatter('testFormatter'), 'should get formatter')
+  t.ok(querymen.validator('testValidator'), 'should get validator')
 
-  let schema = new menquery.Schema({test: String})
+  let schema = new querymen.Schema({test: String})
 
   t.ok(schema.parser('testParser'), 'should get parser in schema')
   t.ok(schema.formatter('testFormatter'), 'should get formatter in schema')
@@ -58,7 +58,7 @@ test('Menquery handler', (t) => {
   t.end()
 })
 
-test('Menquery middleware', (t) => {
+test('Querymen middleware', (t) => {
   t.plan(8)
 
   Test.remove({}).then(() => {
@@ -100,7 +100,7 @@ test('Menquery middleware', (t) => {
         t.false(res.body[0].createdAt, 'should not have createdAt property')
       })
 
-    request(route(new menquery.Schema({
+    request(route(new querymen.Schema({
       after: {
         type: Date,
         operator: '$gte',

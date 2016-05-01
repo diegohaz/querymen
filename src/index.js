@@ -1,7 +1,7 @@
-/** @module menquery */
+/** @module querymen */
 import _ from 'lodash'
-import Param from './menquery-param'
-import Schema from './menquery-schema'
+import Param from './querymen-param'
+import Schema from './querymen-schema'
 
 export {Param, Schema}
 
@@ -13,7 +13,7 @@ export let handlers = {
 
 /**
  * Get or set a handler.
- * @memberof menquery
+ * @memberof querymen
  * @param {string} type - Handler type.
  * @param {string} name - Handler name.
  * @param {Function} [fn] - Set the handler method.
@@ -28,7 +28,7 @@ export function handler (type, name, fn) {
 
 /**
  * Get or set a parser.
- * @memberof menquery
+ * @memberof querymen
  * @param {string} name - Parser name.
  * @param {parserFn} [fn] - Set the parser method.
  * @return {parserFn} The parser method.
@@ -39,7 +39,7 @@ export function parser (name, fn) {
 
 /**
  * Get or set a formatter.
- * @memberof menquery
+ * @memberof querymen
  * @param {string} name - Formatter name.
  * @param {formatterFn} [fn] - Set the formatter method.
  * @return {formatterFn} The formatter method.
@@ -50,7 +50,7 @@ export function formatter (name, fn) {
 
 /**
  * Get or set a validator.
- * @memberof menquery
+ * @memberof querymen
  * @param {string} name - Validator name.
  * @param {validatorFn} [fn] - Set the validator method.
  * @return {validatorFn} The validator method.
@@ -61,8 +61,8 @@ export function validator (name, fn) {
 
 /**
  * Create a middleware.
- * @memberof menquery
- * @param {MenquerySchema|Object} [schema] - Schema object.
+ * @memberof querymen
+ * @param {QuerymenSchema|Object} [schema] - Schema object.
  * @param {Object} [options] - Options to be passed to schema.
  * @return {Function} The middleware.
  */
@@ -74,12 +74,12 @@ export function middleware (schema, options) {
 
     _schema.validate(req.query, (err) => {
       if (err) {
-        req.menquery = {error: err}
+        req.querymen = {error: err}
         return next(err)
       }
 
-      req.menquery = _schema.parse()
-      req.menquery.schema = _schema
+      req.querymen = _schema.parse()
+      req.querymen.schema = _schema
       next()
     })
   }
@@ -87,13 +87,13 @@ export function middleware (schema, options) {
 
 /**
  * Error handler middleware.
- * @memberof menquery
+ * @memberof querymen
  * @return {Function} The middleware.
  */
 export function errorHandler () {
   return function (err, req, res, next) {
-    if (req.menquery && req.menquery.error) {
-      res.status(400).json(req.menquery.error)
+    if (req.querymen && req.querymen.error) {
+      res.status(400).json(req.querymen.error)
     } else {
       next(err)
     }

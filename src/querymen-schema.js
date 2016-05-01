@@ -1,11 +1,11 @@
 import _ from 'lodash'
-import menquery from './'
-import MenqueryParam from './menquery-param'
+import querymen from './'
+import QuerymenParam from './querymen-param'
 
 /**
- * MenquerySchema class.
+ * QuerymenSchema class.
  */
-export default class MenquerySchema {
+export default class QuerymenSchema {
 
   /**
    * Create a schema.
@@ -135,7 +135,7 @@ export default class MenquerySchema {
 
     keys.forEach((key) => this.add(key, null, params[key]))
 
-    _.forIn(menquery.handlers, (typedHandler, type) => {
+    _.forIn(querymen.handlers, (typedHandler, type) => {
       _.forIn(typedHandler, (handler, name) => {
         this.handler(type, name, handler)
       })
@@ -204,7 +204,7 @@ export default class MenquerySchema {
   /**
    * Get a param
    * @param {string} name - Param name.
-   * @return {MenqueryParam|undefined} The param or undefined if it doesn't exist.
+   * @return {QuerymenParam|undefined} The param or undefined if it doesn't exist.
    */
   get (name) {
     name = this._getSchemaParamName(name)
@@ -217,7 +217,7 @@ export default class MenquerySchema {
    * @param {string} name - Param name.
    * @param {*} value - Param value.
    * @param {Object} [options] - Param options.
-   * @return {MenqueryParam|undefined} The param or undefined if it doesn't exist.
+   * @return {QuerymenParam|undefined} The param or undefined if it doesn't exist.
    */
   set (name, value, options) {
     name = this._getSchemaParamName(name)
@@ -242,10 +242,10 @@ export default class MenquerySchema {
    * @param {string} name - Param name.
    * @param {*} [value] - Param value.
    * @param {Object} [options] - Param options.
-   * @return {MenqueryParam|boolean} The param or false if param is set to false in schema options.
+   * @return {QuerymenParam|boolean} The param or false if param is set to false in schema options.
    */
   add (name, value, options) {
-    if (name instanceof MenqueryParam) {
+    if (name instanceof QuerymenParam) {
       options = name.options
       value = name.value()
       name = name.name
@@ -272,7 +272,7 @@ export default class MenquerySchema {
     }
 
     options = _.assign({bindTo: 'query'}, this._params[name], options)
-    this.params[name] = new MenqueryParam(name, value, options, this)
+    this.params[name] = new QuerymenParam(name, value, options, this)
 
     this._refreshHandlersInParams(undefined, {[name]: this.params[name]})
 
@@ -284,7 +284,7 @@ export default class MenquerySchema {
    * @param {string} name - Param name.
    * @param {*} [value] - Param value.
    * @param {Object} [options] - Param options.
-   * @return {MenqueryParam|undefined} The param or undefined if it doesn't exist.
+   * @return {QuerymenParam|undefined} The param or undefined if it doesn't exist.
    */
   param (name, value, options) {
     if (arguments.length === 1) {
