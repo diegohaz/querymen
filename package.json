@@ -1,6 +1,6 @@
 {
   "name": "querymen",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Querystring parser middleware for MongoDB, Express and Nodejs",
   "main": "dist/index.js",
   "files": [
