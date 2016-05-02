@@ -202,6 +202,86 @@ schema.param('text').option('elemMatch', 'prop');
 console.log(schema.param('text').parse()); // {text: {$elemMatch: {prop: {$eq: 'IVEGOTCONTROLS!!!!!!!'}}}}
 ```
 
+### Geo queries
+Querymen also support geo queries, but it's disabled by default. To enable geo queries you just need to set `near` option to true in schema options.
+```js
+var querymen = require('querymen');
+
+app.get('/places', querymen.middleware({}, {near: true}), function(req, res) {
+  
+});
+```
+Its `paths` option is set to `['location']` by default, but you can change this as well:
+```js
+var querymen = require('querymen');
+
+app.get('/places', 
+  querymen.middleware({
+    near: {paths: ['loc']}
+  }, {
+    near: true
+  }), 
+  function(req, res) {
+  
+  });
+```
+User requests `/places?near=-22.332113,-44.312311` (latitude, longitude), req.querymen.query will be:
+```js
+req.querymen.query = {
+  loc: {
+    $near: {
+      $geometry: {
+        type: 'Point',
+        coordinates: [-44.312311, -22.332113]
+      }
+    }
+  }
+}
+```
+User requests `/places?near=-22.332113,-44.312311&min_distance=200&max_distance=2000` (min_distance and max_distance in meters), req.querymen.query will be:
+```js
+req.querymen.query = {
+  loc: {
+    $near: {
+      $geometry: {
+        type: 'Point',
+        coordinates: [-44.312311, -22.332113]
+      },
+      $minDistace: 200,
+      $maxDistance: 2000
+    }
+  }
+}
+```
+You can also use legacy geo queries as well. Just set `geojson` option in param:
+```js
+var querymen = require('querymen');
+
+app.get('/places', 
+  querymen.middleware({
+    near: {
+      paths: ['loc'],
+      geojson: false
+    }
+  }, {
+    near: true
+  }), 
+  function(req, res) {
+  
+  });
+```
+User requests `/places?near=-22.332113,-44.312311&min_distance=200&max_distance=2000`, req.querymen.query will be:
+```js
+req.querymen.query = {
+  loc: {
+    $near: [-44.312311, -22.332113],
+    // convert meters to radians automatically
+    $minDistace: 0.000031,
+    $maxDistance: 0.00031
+  }
+}
+```
+
 ### Error handling
 ```js
 // user requests /posts?category=world
