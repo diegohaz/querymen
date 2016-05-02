@@ -75,7 +75,8 @@ export function middleware (schema, options) {
     _schema.validate(req.query, (err) => {
       if (err) {
         req.querymen = {error: err}
-        return next(err)
+        res.status(400)
+        return next(err.message)
       }
 
       req.querymen = _schema.parse()
