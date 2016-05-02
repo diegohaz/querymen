@@ -167,8 +167,18 @@ test('QuerymenSchema default parse', (t) => {
     {$near: {$geometry: {type: 'Point', coordinates: [-44.3213214, -22.84377]}, $maxDistance: 56}},
     'should parse near max_distance')
 
-  t.false(near({}, {min_distance: 56}).min_distance, 'should not parse min_distance')
-  t.false(near({}, {max_distance: 56}).max_distance, 'should not parse max_distance')
+  t.same(
+    near({near: {min_distance: false}}, {near: '-22.84377,-44.3213214', min_distance: 56}).location,
+    {$near: {$geometry: {type: 'Point', coordinates: [-44.3213214, -22.84377]}}},
+    'should not parse near min_distance')
+
+  t.same(
+    near({near: {max_distance: false}}, {near: '-22.84377,-44.3213214', max_distance: 56}).location,
+    {$near: {$geometry: {type: 'Point', coordinates: [-44.3213214, -22.84377]}}},
+    'should not parse near max_distance')
+
+  t.false(near({}, {min_distance: 56}).min_distance, 'should not parse min_distance without near')
+  t.false(near({}, {max_distance: 56}).max_distance, 'should not parse max_distance without near')
   t.false(near({}, {near: '-22.84377,-44.3213214', min_distance: 56}).min_distance, 'should not parse min_distance')
   t.false(near({}, {near: '-22.84377,-44.3213214', max_distance: 56}).max_distance, 'should not parse max_distance')
 

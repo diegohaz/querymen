@@ -54,12 +54,14 @@ export default class QuerymenSchema {
         max: 180,
         min: -180,
         paths: ['location'],
+        max_distance: true,
+        min_distance: true,
         geojson: true,
         format: (value, param, schema) => {
-          if (!schema.param('min_distance')) {
+          if (param.option('min_distance') && !schema.param('min_distance')) {
             schema.param('min_distance', null, {type: Number, min: 0, parse: () => false})
           }
-          if (!schema.param('max_distance')) {
+          if (param.option('max_distance') && !schema.param('max_distance')) {
             schema.param('max_distance', null, {type: Number, parse: () => false})
           }
           return value
@@ -72,21 +74,17 @@ export default class QuerymenSchema {
             query[path].$near = {$geometry: {type: 'Point', coordinates: [value[1], value[0]]}}
             if (minDistance && minDistance.value()) {
               query[path].$near.$minDistance = minDistance.value()
-              schema.param('min_distance', null)
             }
             if (maxDistance && maxDistance.value()) {
               query[path].$near.$maxDistance = maxDistance.value()
-              schema.param('max_distance', null)
             }
           } else {
             query[path].$near = [value[1], value[0]]
             if (minDistance && minDistance.value()) {
               query[path].$minDistance = minDistance.value() / 6371000
-              schema.param('min_distance', null)
             }
             if (maxDistance && maxDistance.value()) {
               query[path].$maxDistance = maxDistance.value() / 6371000
-              schema.param('max_distance', null)
             }
           }
           schema.option('sort', false)
