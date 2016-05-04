@@ -28,7 +28,7 @@ export default class QuerymenSchema {
         normalize: true,
         paths: ['keywords']
       },
-      select: {
+      fields: {
         type: [String],
         bindTo: 'select',
         parse: (value) => {

@@ -94,7 +94,7 @@ test('Querymen middleware', (t) => {
 
     request(app)
       .get('/tests')
-      .query({select: 'title,-_id'})
+      .query({fields: 'title,-_id'})
       .expect(200)
       .end((err, res) => {
         if (err) throw err

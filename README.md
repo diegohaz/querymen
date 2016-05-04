@@ -42,7 +42,7 @@ req.querymen = {
   }
 }
 ```
-User requests `/posts?q=term&select=title,desc` req.querymen will be:
+User requests `/posts?q=term&fields=title,desc` req.querymen will be:
 ```js
 req.querymen = {
   query: {
@@ -60,7 +60,7 @@ req.querymen = {
   }
 }
 ```
-User requests `/posts?select=-title&sort=name,-createdAt` req.querymen will be:
+User requests `/posts?fields=-title&sort=name,-createdAt` req.querymen will be:
 ```js
 req.querymen = {
   query: {},
