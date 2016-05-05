@@ -43,6 +43,8 @@ req.querymen = {
 }
 ```
 User requests `/posts?q=term&fields=title,desc` req.querymen will be:
+> When user requests `/posts?q=term`, querymen parses it to `{keywords: /term/i}`. It was designed to work with [mongoose-keywords](https://github.com/diegohaz/mongoose-keywords) plugin, which adds a `keywords` field to schemas (check that out).
+
 ```js
 req.querymen = {
   query: {
