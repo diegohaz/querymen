@@ -58,7 +58,7 @@ req.querymen = {
     // defaults
     limit: 30, 
     skip: 0, 
-    sort: {name: 1}
+    sort: {createdAt: -1}
   }
 }
 ```
@@ -108,7 +108,7 @@ req.querymen = {
     // defaults
     limit: 30, 
     skip: 0, 
-    sort: {name: 1}
+    sort: {createdAt: -1}
   }
 }
 ```
