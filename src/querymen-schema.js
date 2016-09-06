@@ -58,19 +58,19 @@ export default class QuerymenSchema {
         max_distance: true,
         min_distance: true,
         geojson: true,
-        format: (value, param, schema) => {
-          if (param.option('min_distance') && !schema.param('min_distance')) {
-            schema.param('min_distance', null, {type: Number, min: 0, parse: () => false})
+        format: (value, param) => {
+          if (param.option('min_distance') && !this.param('min_distance')) {
+            this.param('min_distance', null, {type: Number, min: 0, parse: () => false})
           }
-          if (param.option('max_distance') && !schema.param('max_distance')) {
-            schema.param('max_distance', null, {type: Number, parse: () => false})
+          if (param.option('max_distance') && !this.param('max_distance')) {
+            this.param('max_distance', null, {type: Number, parse: () => false})
           }
           return value
         },
-        parse: (value, path, operator, param, schema) => {
+        parse: (value, path, operator, param) => {
           let query = {[path]: {$near: {}}}
-          let minDistance = schema.param('min_distance')
-          let maxDistance = schema.param('max_distance')
+          let minDistance = this.param('min_distance')
+          let maxDistance = this.param('max_distance')
           if (param.option('geojson')) {
             query[path].$near = {$geometry: {type: 'Point', coordinates: [value[1], value[0]]}}
             if (minDistance && minDistance.value()) {
@@ -88,7 +88,7 @@ export default class QuerymenSchema {
               query[path].$maxDistance = maxDistance.value() / 6371000
             }
           }
-          schema.option('sort', false)
+          this.option('sort', false)
           return query
         }
       },
@@ -98,8 +98,8 @@ export default class QuerymenSchema {
         max: 30,
         min: 1,
         bindTo: 'cursor',
-        parse: (value, path, operator, param, schema) => {
-          return {skip: schema.param('limit').value() * (value - 1)}
+        parse: (value, path, operator, param) => {
+          return {skip: this.param('limit').value() * (value - 1)}
         }
       },
       limit: {

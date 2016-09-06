@@ -157,6 +157,7 @@ test('QuerymenParam parse', (t) => {
   t.same(parse(123, {operator: '$gte'}), {test: {$gte: 123}}, 'should parse $gte')
   t.same(parse(123, {operator: '$lt'}), {test: {$lt: 123}}, 'should parse $lt')
   t.same(parse(123, {operator: '$lte'}), {test: {$lte: 123}}, 'should parse $lte')
+  t.same(parse(/test/i, {operator: '$ne'}), {test: {$not: /test/i}}, 'should parse $not')
   t.same(parse(123, {parse: (value, path, operator) => ({[path]: operator})}), {test: '$eq'}, 'should parse option')
   t.end()
 })
@@ -205,7 +206,7 @@ test('QuerymenParam formatter', (t) => {
 
 test('QuerymenParam parser', (t) => {
   let pParam = param(null, {multiple: true})
-  pParam.parser('elemMatch', (elemMatch, value, path, operator, param, schema) => {
+  pParam.parser('elemMatch', (elemMatch, value, path, operator, param) => {
     t.true(path, 'should pass path to parser')
     t.true(operator, 'should pass operator to parser')
     return elemMatch

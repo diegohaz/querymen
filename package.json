@@ -71,6 +71,7 @@
     "watch": "^0.19.2"
   },
   "dependencies": {
-    "lodash": "^4.11.1"
+    "lodash": "^4.11.1",
+    "rich-param": "^1.0.1"
   }
 }
