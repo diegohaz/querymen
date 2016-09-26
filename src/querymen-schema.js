@@ -133,7 +133,7 @@ export default class QuerymenSchema {
 
     let keys = _.union(_.keys(this._params), _.keys(params))
 
-    keys.forEach((key) => this.add(key, null, params[key]))
+    keys.forEach((key) => this.add(key, undefined, params[key]))
 
     _.forIn(querymen.handlers, (typedHandler, type) => {
       _.forIn(typedHandler, (handler, name) => {
