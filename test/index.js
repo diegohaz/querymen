@@ -8,8 +8,13 @@ import './querymen-schema'
 
 mongoose.connect('mongodb://localhost/querymen-test')
 
-let schema = mongoose.Schema({
+const entitySchema = mongoose.Schema({})
+const testSchema = mongoose.Schema({
   title: String,
+  entity: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Entity'
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -20,10 +25,11 @@ let schema = mongoose.Schema({
   }
 })
 
-let Test = mongoose.model('Test', schema)
+const Entity = mongoose.model('Entity', entitySchema)
+const Test = mongoose.model('Test', testSchema)
 
-let route = (...args) => {
-  let app = express()
+const route = (...args) => {
+  const app = express()
   app.get('/tests', querymen.middleware(...args), (req, res) => {
     Test.find(req.querymen.query, req.querymen.select, req.querymen.cursor).then((items) => {
       res.status(200).json(items)
@@ -63,17 +69,30 @@ test('Querymen handler', (t) => {
 })
 
 test('Querymen middleware', (t) => {
-  t.plan(9)
+  t.plan(10)
 
   Test.remove({}).then(() => {
+    return Entity.create({})
+  }).then((entity) => {
     return Test.create(
-      {title: 'Test', createdAt: new Date('2016-04-25T10:05'), location: [-44.1, -22.0]},
+      {title: 'Test', entity, createdAt: new Date('2016-04-25T10:05'), location: [-44.1, -22.0]},
       {title: 'Example', createdAt: new Date('2016-04-24T10:05'), location: [-44.3, -22.0]},
       {title: 'Spaced test', createdAt: new Date('2016-04-23T10:05'), location: [-44.2, -22.0]},
       {title: 'nice!', createdAt: new Date('2016-04-22T10:05'), location: [-44.4, -22.0]}
     )
-  }).then(() => {
-    let app = route()
+  }).then((test1) => {
+    let app = route({
+      entity: testSchema.tree.entity
+    })
+
+    request(app)
+      .get('/tests')
+      .query({entity: test1.entity.id})
+      .expect(200)
+      .end((err, res) => {
+        if (err) throw err
+        t.equal(res.body.length, 1, 'should respond to id filter')
+      })
 
     request(app)
       .get('/tests')
