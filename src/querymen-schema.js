@@ -36,7 +36,7 @@ export default class QuerymenSchema {
           let query = {}
           fields.forEach((field) => {
             if (_.isNil(field) || _.isEmpty(field)) return
-            field = field.replace(/^([\-\+]?)id/, '$1_id')
+            field = field.replace(/^([-+]?)id/, '$1_id')
             if (field.charAt(0) === '-') {
               query[field.slice(1)] = 0
             } else if (field.charAt(0) === '+') {
