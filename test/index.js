@@ -49,13 +49,13 @@ test('Querymen handler', (t) => {
 
   querymen.parser('testParser', () => 'test')
   querymen.formatter('testFormatter', () => 'test')
-  querymen.validator('testValidator', () => ({ valid: false }))
+  querymen.validator('testValidator', () => ({valid: false}))
 
   t.ok(querymen.parser('testParser'), 'should get parser')
   t.ok(querymen.formatter('testFormatter'), 'should get formatter')
   t.ok(querymen.validator('testValidator'), 'should get validator')
 
-  let schema = new querymen.Schema({ test: String })
+  let schema = new querymen.Schema({test: String})
 
   t.ok(schema.parser('testParser'), 'should get parser in schema')
   t.ok(schema.formatter('testFormatter'), 'should get formatter in schema')
@@ -75,10 +75,10 @@ test('Querymen middleware', (t) => {
     return Entity.create({})
   }).then((entity) => {
     return Test.create(
-      { title: 'Test', entity, createdAt: new Date('2016-04-25T10:05'), location: [-44.1, -22.0] },
-      { title: 'Example', createdAt: new Date('2016-04-24T10:05'), location: [-44.3, -22.0] },
-      { title: 'Spaced test', createdAt: new Date('2016-04-23T10:05'), location: [-44.2, -22.0] },
-      { title: 'nice!', createdAt: new Date('2016-04-22T10:05'), location: [-44.4, -22.0] }
+      {title: 'Test', entity, createdAt: new Date('2016-04-25T10:05'), location: [-44.1, -22.0]},
+      {title: 'Example', createdAt: new Date('2016-04-24T10:05'), location: [-44.3, -22.0]},
+      {title: 'Spaced test', createdAt: new Date('2016-04-23T10:05'), location: [-44.2, -22.0]},
+      {title: 'nice!', createdAt: new Date('2016-04-22T10:05'), location: [-44.4, -22.0]}
     )
   }).then((test1) => {
     let app = route({
@@ -87,7 +87,7 @@ test('Querymen middleware', (t) => {
 
     request(app)
       .get('/tests')
-      .query({ entity: test1.entity.id })
+      .query({entity: test1.entity.id})
       .expect(200)
       .end((err, res) => {
         if (err) throw err
@@ -96,7 +96,7 @@ test('Querymen middleware', (t) => {
 
     request(app)
       .get('/tests')
-      .query({ page: 50 })
+      .query({page: 50})
       .expect(400)
       .end((err, res) => {
         if (err) throw err
@@ -113,7 +113,7 @@ test('Querymen middleware', (t) => {
 
     request(app)
       .get('/tests')
-      .query({ fields: 'title,-id' })
+      .query({fields: 'title,-id'})
       .expect(200)
       .end((err, res) => {
         if (err) throw err
@@ -136,7 +136,7 @@ test('Querymen middleware', (t) => {
       }
     })))
       .get('/tests')
-      .query({ before: '2016-04-23T10:00', after: '2016-04-22T10:00' })
+      .query({before: '2016-04-23T10:00', after: '2016-04-22T10:00'})
       .expect(200)
       .end((err, res) => {
         if (err) throw err
@@ -152,7 +152,7 @@ test('Querymen middleware', (t) => {
       }
     })))
       .get('/tests')
-      .query({ after: '2016-04-25T10:00' })
+      .query({after: '2016-04-25T10:00'})
       .expect(200)
       .end((err, res) => {
         if (err) throw err
@@ -164,9 +164,9 @@ test('Querymen middleware', (t) => {
       near: {
         geojson: false
       }
-    }, { near: true })))
+    }, {near: true})))
       .get('/tests')
-      .query({ near: '-22.0,-44.0' })
+      .query({near: '-22.0,-44.0'})
       .expect(200)
       .end((err, res) => {
         if (err) throw err
