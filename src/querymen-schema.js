@@ -302,7 +302,7 @@ export default class QuerymenSchema {
       if (this.options[this._getSchemaParamName(param.name)] === false) return
       let bind = param.options.bindTo
 
-      query[bind] = _.assign(query[bind], param.parse())
+      query[bind] = _.merge(query[bind], param.parse())
     })
 
     return query

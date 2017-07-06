@@ -69,7 +69,7 @@ test('Querymen handler', (t) => {
 })
 
 test('Querymen middleware', (t) => {
-  t.plan(10)
+  t.plan(12)
 
   Test.remove({}).then(() => {
     return Entity.create({})
@@ -121,6 +121,27 @@ test('Querymen middleware', (t) => {
         t.true(res.body[0].title, 'should have title property')
         t.false(res.body[0]._id, 'should not have _id property')
         t.false(res.body[0].createdAt, 'should not have createdAt property')
+      })
+
+    request(route(new querymen.Schema({
+      before: {
+        type: Date,
+        operator: '$lte',
+        paths: ['createdAt']
+      },
+      after: {
+        type: Date,
+        operator: '$gte',
+        paths: ['createdAt']
+      }
+    })))
+      .get('/tests')
+      .query({before: '2016-04-23T10:00', after: '2016-04-22T10:00'})
+      .expect(200)
+      .end((err, res) => {
+        if (err) throw err
+        t.equal(res.body.length, 1, 'should respond with 1 item')
+        t.equal(res.body[0].title, 'nice!', 'should respond with item after and before date')
       })
 
     request(route(new querymen.Schema({
