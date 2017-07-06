@@ -6,6 +6,5 @@
     "es6": true
   },
   "rules": {
-    "object-curly-spacing": "error"
   }
 }
