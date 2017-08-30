@@ -2,7 +2,7 @@ import request from 'supertest'
 import express from 'express'
 import mongoose from 'mongoose'
 import test from 'tape'
-import querymen from '../src'
+import querymen, { Schema } from '../src'
 import './querymen-param'
 import './querymen-schema'
 
@@ -30,16 +30,13 @@ const Test = mongoose.model('Test', testSchema)
 
 const route = (...args) => {
   const app = express()
-  app.get('/tests', querymen.middleware(...args), ({ querymen: { query, select, cursor } }, res) => {
-    console.log('query', query)
-    console.log('select', select)
-    console.log('cursor', cursor)
+  app.get('/tests', querymen.middleware(...args), ({ querymen: { query, select, cursor } }, res) =>
     Test.find(query, select, cursor).then((items) => {
       res.status(200).json(items)
     }).catch((err) => {
       res.status(500).send(err)
     })
-  })
+  )
 
   app.use(querymen.errorHandler())
   return app

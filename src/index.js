@@ -3,7 +3,7 @@ import _ from 'lodash'
 import Param from './querymen-param'
 import Schema from './querymen-schema'
 
-export {Param, Schema}
+export { Param, Schema }
 
 export let handlers = {
   parsers: {},
@@ -72,7 +72,7 @@ export function middleware (schema, options) {
 
     _schema.validate(req.query, (err) => {
       if (err) {
-        req.querymen = {error: err}
+        req.querymen = { error: err }
         res.status(400)
         return next(err.message)
       }
@@ -99,4 +99,4 @@ export function errorHandler () {
   }
 }
 
-export default {Schema, Param, handlers, handler, parser, formatter, validator, middleware, errorHandler}
+export default { Schema, Param, handlers, handler, parser, formatter, validator, middleware, errorHandler }
