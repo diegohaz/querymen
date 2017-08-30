@@ -2,8 +2,7 @@ import request from 'supertest'
 import express from 'express'
 import mongoose from 'mongoose'
 import test from 'tape'
-import querymen from '../src'
-import { Schema } from '../src'
+import querymen, { Schema } from '../src'
 import './querymen-param'
 import './querymen-schema'
 
@@ -178,7 +177,7 @@ test('Querymen middleware', (t) => {
 })
 
 test('Querymen middleware with custom Schema', (t) => {
-  t.plan(2)
+  t.plan(8)
 
   Test.remove({}).then(() => {
     return Entity.create({})
@@ -199,7 +198,9 @@ test('Querymen middleware with custom Schema', (t) => {
       .end((err, res) => {
         if (err) throw err
         t.equal(res.body.length, 2, 'should respond with 2 items')
+        t.assert(res.body[0])
         t.equal(res.body[0].title, 'Test', 'should equal same title')
+        t.assert(res.body[1])
         t.equal(res.body[1].title, 'Example', 'should equal same title')
       })
 
@@ -210,6 +211,8 @@ test('Querymen middleware with custom Schema', (t) => {
       .end((err, res) => {
         if (err) throw err
         t.equal(res.body.length, 2, 'should respond with 2 items')
+        t.assert(res.body[0])
+        t.assert(res.body[1])
       })
   })
 })
