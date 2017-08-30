@@ -3,6 +3,7 @@ import express from 'express'
 import mongoose from 'mongoose'
 import test from 'tape'
 import querymen from '../src'
+import { Schema } from '../src'
 import './querymen-param'
 import './querymen-schema'
 
@@ -31,6 +32,7 @@ const Test = mongoose.model('Test', testSchema)
 const route = (...args) => {
   const app = express()
   app.get('/tests', querymen.middleware(...args), (req, res) => {
+    console.log(req.querymen.cursor)
     Test.find(req.querymen.query, req.querymen.select, req.querymen.cursor).then((items) => {
       res.status(200).json(items)
     }).catch((err) => {
@@ -171,6 +173,43 @@ test('Querymen middleware', (t) => {
       .end((err, res) => {
         if (err) throw err
         t.equal(res.body[1].title, 'Spaced test', 'should respond with item near')
+      })
+  })
+})
+
+test('Querymen middleware with custom Schema', (t) => {
+  t.plan(2)
+
+  Test.remove({}).then(() => {
+    return Entity.create({})
+  }).then((entity) => {
+    return Test.create(
+      {title: 'Test', entity, createdAt: new Date('2016-04-25T10:05'), location: [-44.1, -22.0]},
+      {title: 'Example', entity, createdAt: new Date('2016-04-24T10:05'), location: [-44.3, -22.0]},
+      {title: 'Spaced test', entity, createdAt: new Date('2016-04-23T10:05'), location: [-44.2, -22.0]},
+      {title: 'nice!', entity, createdAt: new Date('2016-04-22T10:05'), location: [-44.4, -22.0]}
+    )
+  }).then((test1) => {
+    let app = route(new Schema({ title: String }))
+
+    request(app)
+      .get('/tests')
+      .query({limit: 2})
+      .expect(200)
+      .end((err, res) => {
+        if (err) throw err
+        t.equal(res.body.length, 2, 'should respond with 2 items')
+        t.equal(res.body[0].title, 'Test', 'should equal same title')
+        t.equal(res.body[1].title, 'Example', 'should equal same title')
+      })
+
+    request(app)
+      .get('/tests')
+      .query({limit: 2, page: 2})
+      .expect(200)
+      .end((err, res) => {
+        if (err) throw err
+        t.equal(res.body.length, 2, 'should respond with 2 items')
       })
   })
 })
