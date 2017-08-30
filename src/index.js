@@ -68,9 +68,7 @@ export function validator (name, fn) {
  */
 export function middleware (schema, options) {
   return function (req, res, next) {
-    let _schema = schema instanceof Schema
-                ? _.clone(schema)
-                : new Schema(schema, options)
+    let _schema = new Schema(schema, options)
 
     _schema.validate(req.query, (err) => {
       if (err) {
