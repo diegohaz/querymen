@@ -2,7 +2,7 @@ import request from 'supertest'
 import express from 'express'
 import mongoose from 'mongoose'
 import test from 'tape'
-import querymen, { Schema } from '../src'
+import querymen from '../src'
 import './querymen-param'
 import './querymen-schema'
 
@@ -254,7 +254,7 @@ test('Querymen middleware | pagination problem', (t) => {
       .expect(200)
       .end((err, res) => {
         if (err) throw err
-          t.equal(res.body.length, 2, 'should respond with 2 items')
+        t.equal(res.body.length, 2, 'should respond with 2 items')
       })
 
     request(app)
