@@ -333,7 +333,10 @@ export default class QuerymenSchema {
     for (let i in this.params) {
       if (error) break
       let param = this.params[i]
-      param.validate((err) => { error = err })
+
+      if (param.options.max !== null) {
+        param.validate((err) => { error = err })
+      }
     }
 
     return next(error)
