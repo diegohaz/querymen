@@ -20,33 +20,32 @@ npm install --save querymen
 ### Pagination
 Querymen has a default schema to handle pagination. This is the most simple and common usage.
 ```js
-var querymen = require('querymen');
+import { middleware as query } from 'querymen';
 
-app.get('/posts', querymen.middleware(), function(req, res) {
-  var query = req.querymen;
+app.get('/posts', query(), ({ querymen: { query, select, cursor } }, res) => {
 
-  Post.find(query.query, query.select, query.cursor).then(function(posts) {
+  Post.find(query, select, cursor).then(posts => {
     // posts are proper paginated here
   });
 });
 ```
-User requests `/posts?page=2&limit=20&sort=-createdAt` req.querymen will be:
+User requests `/posts?page=2&limit=20&sort=-createdAt` querymen will be:
 ```js
-req.querymen = {
+querymen = {
   query: {},
   select: {},
   cursor: {
     limit: 20, 
     skip: 20, 
-    sort: {createdAt: -1}
+    sort: { createdAt: -1 }
   }
 }
 ```
-User requests `/posts?q=term&fields=title,desc` req.querymen will be:
+User requests `/posts?q=term&fields=title,desc` querymen will be:
 > When user requests `/posts?q=term`, querymen parses it to `{keywords: /term/i}`. It was designed to work with [mongoose-keywords](https://github.com/diegohaz/mongoose-keywords) plugin, which adds a `keywords` field to schemas (check that out).
 
 ```js
-req.querymen = {
+querymen = {
   query: {
     keywords: /term/i
   },
@@ -58,13 +57,13 @@ req.querymen = {
     // defaults
     limit: 30, 
     skip: 0, 
-    sort: {createdAt: -1}
+    sort: { createdAt: -1 }
   }
 }
 ```
-User requests `/posts?fields=-title&sort=name,-createdAt` req.querymen will be:
+User requests `/posts?fields=-title&sort=name,-createdAt` querymen will be:
 ```js
-req.querymen = {
+querymen = {
   query: {},
   select: {
     title: 0
@@ -83,60 +82,60 @@ req.querymen = {
 ### Custom schema
 You can define a custom schema, which will be merged into querymen default schema (explained above).
 ```js
-var querymen = require('querymen');
+import { middleware as query } from 'querymen';
 
-app.get('/posts', querymen.middleware({
+app.get('/posts', query({
   after: {
     type: Date,
     paths: ['createdAt']
     operator: '$gte'
   }
-}), function(req, res) {
-  Post.find(req.querymen.query).then(function(posts) {
+}), ({ querymen }, res) => {
+  Post.find(querymen.query).then(posts => {
     // ...
   });
 });
 ```
-User requests `/posts?after=2016-04-23` req.querymen will be:
+User requests `/posts?after=2016-04-23` querymen will be:
 ```js
-req.querymen = {
+querymen = {
   query: {
-    createdAt: {$gte: 1461369600000}
+    createdAt: { $gte: 1461369600000 }
   },
   select: {},
   cursor: {
     // defaults
     limit: 30, 
     skip: 0, 
-    sort: {createdAt: -1}
+    sort: { createdAt: -1 }
   }
 }
 ```
 
 ### Reusable schemas
-You can create reusable schemas as well. Just instantiate a `querymen.Schema` object.
+You can create reusable schemas as well. Just instantiate a `Schema` object.
 ```js
-var querymen = require('querymen');
+import { middleware as query, Schema } from 'querymen';
 
-var schema = new querymen.Schema({
+const schema = new Schema({
   tags: {
     type: [String],
   }
 });
 
 // user requests /posts?tags=world,travel
-// req.querymen.query is {tags: {$in: ['world', 'travel']}}
-app.get('/posts', querymen.middleware(schema));
-app.get('/articles', querymen.middleware(schema));
+// querymen.query is { tags: { $in: ['world', 'travel'] }}
+app.get('/posts', query(schema));
+app.get('/articles', query(schema));
 ```
 
 ### Advanced schema
 ```js
-var querymen = require('querymen');
+import { middleware as query, Schema } from 'querymen';
 
-var schema = new querymen.Schema({
-  active: Boolean, // shorthand to {type: Boolean}
-  sort: '-createdAt', // shorthand to {type: String, default: '-createdAt'}
+const schema = new Schema({
+  active: Boolean, // shorthand to { type: Boolean }
+  sort: '-createdAt', // shorthand to { type: String, default: '-createdAt' }
   term: {
     type: RegExp,
     paths: ['title', 'description'],
@@ -152,78 +151,78 @@ var schema = new querymen.Schema({
   limit: 'max_items' // change name of default parameter `limit` to `max_items`
 });
 
-app.get('/posts', querymen.middleware(schema), function(req, res) {
+app.get('/posts', query(schema), ({ querymen }, res) => {
   // user requests /posts?term=awesome&with_picture=true&active=true&max_items=100
-  // req.querymen.query is {picture: {$exists: true}, active: true}
-  // req.querymen.cursor is {limit: 100, sort: {createdAt: -1}}
-  // req.querymen.search is {$or: [{title: /awesome/i}, {description: /awesome/i}]}
+  // querymen.query is { picture: { $exists: true }, active: true }
+  // querymen.cursor is { limit: 100, sort: { createdAt: -1 } }
+  // querymen.search is { $or: [{ title: /awesome/i }, { description: /awesome/i }]}
 });
 ```
 
 ### Dynamic advanced schema
 ```js
-var querymen = require('querymen');
-var schema = new querymen.Schema();
+import { middleware as query, Schema } from 'querymen';
+const schema = new Schema();
 
-schema.formatter('scream', function(scream, value, param) {
+schema.formatter('scream', (scream, value, param) => {
   if (scream) {
     value = value.toUpperCase() + '!!!!!!!';
   }
   return value;
 });
 
-schema.param('text', null, {type: String}); // {type: String}
-schema.param('text').option('scream', true); // {type: String, scream: true}
+schema.param('text', null, { type: String }); // { type: String }
+schema.param('text').option('scream', true); // { type: String, scream: true }
 schema.param('text').value('help');
 console.log(schema.param('text').value()); // HELP!!!!!!!
 
-schema.validator('isPlural', function(isPlural, value, param) {
+schema.validator('isPlural', (isPlural, value, param) => {
   return {
     valid: !isPlural || value.substr(-1) === 's',
     message: param.name + ' must be in plural form.'
   };
 });
 
-schema.param('text').option('isPlural', true); // {type: String, scream: true, isPlural: true}
+schema.param('text').option('isPlural', true); // { type: String, scream: true, isPlural: true }
 console.log(schema.validate()); // false
 schema.param('text', 'helps');
 console.log(schema.validate()); // true
 console.log(schema.param('text').value()); // HELPS!!!!!!!
 
-schema.parser('elemMatch', function(elemMatch, value, path, operator) {
+schema.parser('elemMatch', (elemMatch, value, path, operator) => {
   if (elemMatch) {
-    value = {[path]: {$elemMatch: {[elemMatch]: {[operator]: value}}}};
+    value = { [path]: { $elemMatch: {[elemMatch]: {[operator]: value } }}};
   }
   return value;
 });
 
 schema.param('text', 'ivegotcontrols');
-console.log(schema.param('text').parse()); // {text: 'IVEGOTCONTROLS!!!!!!!'}
+console.log(schema.param('text').parse()); // { text: 'IVEGOTCONTROLS!!!!!!!' }
 
 schema.param('text').option('elemMatch', 'prop');
-console.log(schema.param('text').parse()); // {text: {$elemMatch: {prop: {$eq: 'IVEGOTCONTROLS!!!!!!!'}}}}
+console.log(schema.param('text').parse()); // { text: { $elemMatch: { prop: { $eq: 'IVEGOTCONTROLS!!!!!!!'} }}}
 ```
 
 ### Geo queries
 Querymen also support geo queries, but it's disabled by default. To enable geo queries you just need to set `near` option to true in schema options.
 ```js
-var querymen = require('querymen');
+import { middleware as query } from 'querymen';
 
-app.get('/places', querymen.middleware({}, {near: true}), function(req, res) {
+app.get('/places', query({}, { near: true }), (req, res) => {
   
 });
 ```
 Its `paths` option is set to `['location']` by default, but you can change this as well:
 ```js
-var querymen = require('querymen');
+import { middleware as query } from 'querymen';
 
 app.get('/places', 
-  querymen.middleware({
-    near: {paths: ['loc']}
+  query({
+    near: { paths: ['loc'] }
   }, {
     near: true
   }), 
-  function(req, res) {
+  (req, res) => {
   
   });
 ```
@@ -257,10 +256,10 @@ req.querymen.query = {
 ```
 You can also use legacy geo queries as well. Just set `geojson` option in param:
 ```js
-var querymen = require('querymen');
+import { middleware as query } from 'querymen';
 
 app.get('/places', 
-  querymen.middleware({
+  query({
     near: {
       paths: ['loc'],
       geojson: false
@@ -268,7 +267,7 @@ app.get('/places',
   }, {
     near: true
   }), 
-  function(req, res) {
+  (req, res) => {
   
   });
 ```
@@ -287,24 +286,24 @@ req.querymen.query = {
 ### Error handling
 ```js
 // user requests /posts?category=world
-var querymen = require('querymen');
+import { middleware as query, querymen, Schema } from 'querymen';
 
-var schema = new querymen.Schema({
+const schema = new Schema({
   category: {
     type: String,
     enum: ['culture', 'general', 'travel']
   }
 });
 
-app.get('/posts', querymen.middleware(schema));
+app.get('/posts', query(schema));
 
 // create your own handler
-app.use(function(err, req, res, next) {
+app.use((err, req, res, next) => {
   res.status(400).json(err);
 });
 
 // or use querymen error handler
-app.use(querymen.errorHandler())
+app.use(querymen.errorHandler());
 ```
 Response body will look like:
 ```json
