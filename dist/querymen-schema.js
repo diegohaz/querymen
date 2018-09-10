@@ -28,7 +28,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * QuerymenSchema class.
  */
 var QuerymenSchema = function () {
-
   /**
    * Create a schema.
    * @param {Object} [params] - Params object.
@@ -41,6 +40,21 @@ var QuerymenSchema = function () {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
     _classCallCheck(this, QuerymenSchema);
+
+    this.handler = this.handler.bind(this);
+    this.validator = this.validator.bind(this);
+    this._getSchemaParamName = this._getSchemaParamName.bind(this);
+    this._parseParamOptions = this._parseParamOptions.bind(this);
+    this._refreshHandlersInParams = this._refreshHandlersInParams.bind(this);
+    this.add = this.add.bind(this);
+    this.formatter = this.formatter.bind(this);
+    this.get = this.get.bind(this);
+    this._getQueryParamName = this._getQueryParamName.bind(this);
+    this.option = this.option.bind(this);
+    this.param = this.param.bind(this);
+    this.parse = this.parse.bind(this);
+    this.set = this.set.bind(this);
+    this.validate = this.validate.bind(this);
 
     this.params = {};
     this.options = _lodash2.default.assign({
@@ -177,6 +191,8 @@ var QuerymenSchema = function () {
         _this.handler(type, name, handler);
       });
     });
+
+    // console.log('0. Default Query : ', _.keys(this.params).map(key => this.params[key]._value))
   }
 
   /**
@@ -291,8 +307,6 @@ var QuerymenSchema = function () {
         });
 
         return param;
-      } else {
-        return;
       }
     }
 
@@ -366,9 +380,13 @@ var QuerymenSchema = function () {
         var value = values[_this2._getQueryParamName(param.name)];
 
         if (!_lodash2.default.isNil(value)) {
-          param.value(value);
+          _this2.params[param.name].value(value);
+        } else {
+          _this2.params[param.name].value(undefined);
         }
       });
+
+      // console.log('2-2. Modify Query : ', _.keys(this.params).map(key => this.params[key]._value))
 
       _lodash2.default.forIn(this.params, function (param) {
         if (_this2.options[_this2._getSchemaParamName(param.name)] === false) return;
@@ -376,6 +394,8 @@ var QuerymenSchema = function () {
 
         query[bind] = _lodash2.default.merge(query[bind], param.parse());
       });
+
+      // console.log('3. parsed Query : ', query)
 
       return query;
     }

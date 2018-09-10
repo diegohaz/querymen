@@ -42,6 +42,9 @@ var QuerymenParam = function (_Param) {
 
     var _this = _possibleConstructorReturn(this, (QuerymenParam.__proto__ || Object.getPrototypeOf(QuerymenParam)).call(this, name, value, options));
 
+    _this.parse = _this.parse.bind(_this);
+    _this.parser = _this.parser.bind(_this);
+
     _this.handlers.parsers = {};
     _this.options = _lodash2.default.assign({
       paths: [name],

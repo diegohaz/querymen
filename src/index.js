@@ -1,4 +1,5 @@
 /** @module querymen */
+import _ from 'lodash'
 import Param from './querymen-param'
 import Schema from './querymen-schema'
 
@@ -67,7 +68,16 @@ export function validator (name, fn) {
  */
 export function middleware (schema, options) {
   return function (req, res, next) {
-    let _schema = schema instanceof Schema ? schema : new Schema(schema, options)
+    let _schema
+    if (schema && schema.options && schema.options.near) {
+      _schema = schema instanceof Schema
+        ? _.clone(schema)
+        : new Schema(schema, options)
+    } else {
+      _schema = schema instanceof Schema
+        ? _.cloneDeep(schema)
+        : new Schema(schema, options)
+    }
 
     _schema.validate(req.query, (err) => {
       if (err) {
@@ -75,8 +85,9 @@ export function middleware (schema, options) {
         res.status(400)
         return next(err.message)
       }
+      // console.log('1. request Query : ', req.query)
 
-      req.querymen = _schema.parse()
+      req.querymen = _schema.parse(req.query)
       req.querymen.schema = _schema
       next()
     })

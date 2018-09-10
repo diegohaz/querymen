@@ -13,6 +13,10 @@ export default class QuerymenParam extends Param {
    */
   constructor (name, value, options = {}) {
     super(name, value, options)
+
+    this.parse = this.parse.bind(this)
+    this.parser = this.parser.bind(this)
+
     this.handlers.parsers = {}
     this.options = _.assign({
       paths: [name],
