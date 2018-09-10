@@ -1,4 +1,5 @@
 /** @module querymen */
+import _ from 'lodash'
 import Param from './querymen-param'
 import Schema from './querymen-schema'
 
