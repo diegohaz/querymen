@@ -11,6 +11,10 @@ exports.validator = validator;
 exports.middleware = middleware;
 exports.errorHandler = errorHandler;
 
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
 var _querymenParam = require('./querymen-param');
 
 var _querymenParam2 = _interopRequireDefault(_querymenParam);
@@ -21,9 +25,9 @@ var _querymenSchema2 = _interopRequireDefault(_querymenSchema);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/** @module querymen */
 exports.Param = _querymenParam2.default;
-exports.Schema = _querymenSchema2.default;
+exports.Schema = _querymenSchema2.default; /** @module querymen */
+
 var handlers = exports.handlers = {
   parsers: {},
   formatters: {},
@@ -86,7 +90,12 @@ function validator(name, fn) {
  */
 function middleware(schema, options) {
   return function (req, res, next) {
-    var _schema = schema instanceof _querymenSchema2.default ? schema : new _querymenSchema2.default(schema, options);
+    var _schema = void 0;
+    if (schema && schema.options && schema.options.near) {
+      _schema = schema instanceof _querymenSchema2.default ? _lodash2.default.clone(schema) : new _querymenSchema2.default(schema, options);
+    } else {
+      _schema = schema instanceof _querymenSchema2.default ? _lodash2.default.cloneDeep(schema) : new _querymenSchema2.default(schema, options);
+    }
 
     _schema.validate(req.query, function (err) {
       if (err) {
