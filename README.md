@@ -25,7 +25,7 @@ Querymen has a default schema to handle pagination as shown below.
   page: {
     type: Number,
     default: 1,
-    max: 30,
+    max: Infinity,
     min: 1,
     bindTo: 'cursor',
     parse: (value, path, operator, param) => {
@@ -34,9 +34,9 @@ Querymen has a default schema to handle pagination as shown below.
   },
   limit: {
     type: Number,
-    default: 30,
-    max: 100,
-    min: 1,
+    default: 0,
+    max: Infinity,
+    min: 0,
     bindTo: 'cursor',
     parse: (value) => ({limit: value})
   },

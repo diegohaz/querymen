@@ -95,7 +95,7 @@ export default class QuerymenSchema {
       page: {
         type: Number,
         default: 1,
-        max: 30,
+        max: Infinity,
         min: 1,
         bindTo: 'cursor',
         parse: (value, path, operator, param) => {
@@ -104,9 +104,9 @@ export default class QuerymenSchema {
       },
       limit: {
         type: Number,
-        default: 30,
-        max: 100,
-        min: 1,
+        default: 0,
+        max: Infinity,
+        min: 0,
         bindTo: 'cursor',
         parse: (value) => ({limit: value})
       },
