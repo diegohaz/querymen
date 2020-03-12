@@ -42,6 +42,21 @@ const route = (...args) => {
   return app
 }
 
+test('Prototype pollution', (t) => {
+  const { toString } = {}
+
+  querymen.handler('__proto__', 'toString', 'JHU')
+  t.ok({}.toString === toString, 'should not be vulnerable to prototype pollution')
+
+  querymen.handler('formatters', '__proto__', { toString: 'JHU' })
+  t.ok({}.toString === toString, 'should not be vulnerable to prototype pollution')
+
+  querymen.handler('validators', '__proto__', { toString: 'JHU' })
+  t.ok({}.toString === toString, 'should not be vulnerable to prototype pollution')
+
+  t.end()
+})
+
 test('Querymen handler', (t) => {
   t.notOk(querymen.parser('testParser'), 'should not get nonexistent parser')
   t.notOk(querymen.formatter('testFormatter'), 'should not get nonexistent formatter')
