@@ -29,7 +29,7 @@ test('QuerymenSchema add', (t) => {
   t.same(add('123,456', [Number]), [123, 456], 'should add a param with type option number array')
   t.same(add('123,0', [Boolean]), [true, false], 'should add a param with type option boolean array')
   t.same(add('2016,2017', [Date]), [new Date('2016'), new Date('2017')], 'should add a param with type option date array')
-  t.same(add('123,456', [RegExp]), [/123/i, /123/i], 'should add a param with type option regexp array')
+  t.same(add('123,456', [RegExp]), [/123/i, /456/i], 'should add a param with type option regexp array')
   t.end()
 })
 
