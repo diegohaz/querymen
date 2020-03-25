@@ -30,13 +30,13 @@ const Test = mongoose.model('Test', testSchema)
 
 const route = (...args) => {
   const app = express()
-  app.get('/tests', querymen.middleware(...args), (req, res) => {
-    Test.find(req.querymen.query, req.querymen.select, req.querymen.cursor).then((items) => {
+  app.get('/tests', querymen.middleware(...args), ({ querymen: { query, select, cursor } }, res) =>
+    Test.find(query, select, cursor).then((items) => {
       res.status(200).json(items)
     }).catch((err) => {
       res.status(500).send(err)
     })
-  })
+  )
 
   app.use(querymen.errorHandler())
   return app
@@ -185,7 +185,100 @@ test('Querymen middleware', (t) => {
       .expect(200)
       .end((err, res) => {
         if (err) throw err
-        t.equal(res.body[1].title, 'Spaced test', 'should respond with item near')
+        t.equal(res.body.length, 4, 'should respond with item near')
+      })
+  })
+})
+
+test('Querymen middleware | cache problem', (t) => {
+  t.plan(3)
+
+  Test.remove({}).then(() => {
+    return Entity.create({})
+  }).then((entity) => {
+    return Test.create(
+      {title: 'Test', entity, createdAt: new Date('2016-04-25T10:05'), location: [-44.1, -22.0]},
+      {title: 'Example', createdAt: new Date('2016-04-24T10:05'), location: [-44.3, -22.0]},
+      {title: 'Spaced test', createdAt: new Date('2016-04-23T10:05'), location: [-44.2, -22.0]},
+      {title: 'nice!', createdAt: new Date('2016-04-22T10:05'), location: [-44.4, -22.0]}
+    )
+  }).then((test1) => {
+    let app = route(
+      new querymen.Schema({
+        title: RegExp
+      })
+    )
+
+    request(app)
+      .get('/tests')
+      .expect(200)
+      .end((err, res) => {
+        if (err) throw err
+        t.equal(res.body.length, 4, 'should respond with 4 items')
+      })
+
+    request(app)
+      .get('/tests')
+      .query({title: 'test'})
+      .expect(200)
+      .end((err, res) => {
+        if (err) throw err
+        t.equal(res.body.length, 2, 'should respond with 2 items')
+      })
+
+    request(app)
+      .get('/tests')
+      .expect(200)
+      .end((err, res) => {
+        if (err) throw err
+        t.equal(res.body.length, 4, 'should respond with 4 items')
+      })
+  })
+})
+
+test('Querymen middleware | pagination problem', (t) => {
+  t.plan(3)
+
+  Test.remove({}).then(() => {
+    return Entity.create({})
+  }).then((entity) => {
+    return Test.create(
+      {title: 'Test', entity, createdAt: new Date('2016-04-25T10:05'), location: [-44.1, -22.0]},
+      {title: 'Example', createdAt: new Date('2016-04-24T10:05'), location: [-44.3, -22.0]},
+      {title: 'Spaced test', createdAt: new Date('2016-04-23T10:05'), location: [-44.2, -22.0]},
+      {title: 'nice!', createdAt: new Date('2016-04-22T10:05'), location: [-44.4, -22.0]}
+    )
+  }).then((test1) => {
+    let app = route(
+      new querymen.Schema({
+        title: RegExp
+      })
+    )
+
+    request(app)
+      .get('/tests')
+      .expect(200)
+      .end((err, res) => {
+        if (err) throw err
+        t.equal(res.body.length, 4, 'should respond with 4 items')
+      })
+
+    request(app)
+      .get('/tests')
+      .query({limit: 2})
+      .expect(200)
+      .end((err, res) => {
+        if (err) throw err
+        t.equal(res.body.length, 2, 'should respond with 2 items')
+      })
+
+    request(app)
+      .get('/tests')
+      .query({limit: 2, page: 2})
+      .expect(200)
+      .end((err, res) => {
+        if (err) throw err
+        t.equal(res.body.length, 2, 'should respond with 2 items')
       })
   })
 })

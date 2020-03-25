@@ -13,6 +13,16 @@ export default class QuerymenSchema {
    * @param {Object} [options] - Options object.
    */
   constructor (params = {}, options = {}) {
+    // if it's already a QuerymenSchema
+    // just make a copy of the original
+    if (params instanceof QuerymenSchema) {
+      _.keys(params).forEach(key => {
+        this[key] = _.cloneDeep(params[key])
+      })
+
+      return
+    }
+
     this.params = {}
     this.options = _.assign({
       near: false
