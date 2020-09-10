@@ -87,7 +87,7 @@ import { middleware as query } from 'querymen';
 app.get('/posts', query({
   after: {
     type: Date,
-    paths: ['createdAt']
+    paths: ['createdAt'],
     operator: '$gte'
   }
 }), ({ querymen }, res) => {
