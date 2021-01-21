@@ -24,9 +24,9 @@ export default class QuerymenSchema {
     }
     this._params = {
       q: {
-        type: RegExp,
-        normalize: true,
-        paths: ['keywords']
+        type: String,
+        paths: ['$text'],
+        operator: "$search"
       },
       fields: {
         type: [String],
