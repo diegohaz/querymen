@@ -136,7 +136,7 @@ test('QuerymenSchema name', (t) => {
 
 test('QuerymenSchema default parse', (t) => {
   let parse = (...args) => schema().parse(...args)
-  t.same(parse({q: 'testing'}).query.keywords, /testing/i, 'should parse q')
+  t.same(parse({ q: 'testing' }).query, { $text: { $search: 'testing' } }, 'should parse q')
   t.same(parse().select, {}, 'should not parse undefined select')
   t.same(parse({fields: ''}).select, {}, 'should not parse empty select')
   t.same(parse({fields: 'a'}).select, {a: 1}, 'should parse one select')
