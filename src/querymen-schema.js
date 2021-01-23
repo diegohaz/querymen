@@ -26,7 +26,7 @@ export default class QuerymenSchema {
       q: {
         type: String,
         paths: ['$text'],
-        operator: "$search"
+        operator: '$search'
       },
       fields: {
         type: [String],
