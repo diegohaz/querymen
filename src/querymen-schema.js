@@ -6,13 +6,27 @@ import QuerymenParam from './querymen-param'
  * QuerymenSchema class.
  */
 export default class QuerymenSchema {
-
   /**
    * Create a schema.
    * @param {Object} [params] - Params object.
    * @param {Object} [options] - Options object.
    */
   constructor (params = {}, options = {}) {
+    this.handler = this.handler.bind(this)
+    this.validator = this.validator.bind(this)
+    this._getSchemaParamName = this._getSchemaParamName.bind(this)
+    this._parseParamOptions = this._parseParamOptions.bind(this)
+    this._refreshHandlersInParams = this._refreshHandlersInParams.bind(this)
+    this.add = this.add.bind(this)
+    this.formatter = this.formatter.bind(this)
+    this.get = this.get.bind(this)
+    this._getQueryParamName = this._getQueryParamName.bind(this)
+    this.option = this.option.bind(this)
+    this.param = this.param.bind(this)
+    this.parse = this.parse.bind(this)
+    this.set = this.set.bind(this)
+    this.validate = this.validate.bind(this)
+
     this.params = {}
     this.options = _.assign({
       near: false
@@ -99,7 +113,7 @@ export default class QuerymenSchema {
         min: 1,
         bindTo: 'cursor',
         parse: (value, path, operator, param) => {
-          return {skip: this.param('limit').value() * (value - 1)}
+          return { skip: this.param('limit').value() * (value - 1) }
         }
       },
       limit: {
@@ -140,6 +154,8 @@ export default class QuerymenSchema {
         this.handler(type, name, handler)
       })
     })
+
+    // console.log('0. Default Query : ', _.keys(this.params).map(key => this.params[key]._value))
   }
 
   /**
@@ -232,8 +248,6 @@ export default class QuerymenSchema {
       })
 
       return param
-    } else {
-      return
     }
   }
 
@@ -294,9 +308,13 @@ export default class QuerymenSchema {
       let value = values[this._getQueryParamName(param.name)]
 
       if (!_.isNil(value)) {
-        param.value(value)
+        this.params[param.name].value(value)
+      } else {
+        this.params[param.name].value(undefined)
       }
     })
+
+    // console.log('2-2. Modify Query : ', _.keys(this.params).map(key => this.params[key]._value))
 
     _.forIn(this.params, (param) => {
       if (this.options[this._getSchemaParamName(param.name)] === false) return
@@ -304,6 +322,8 @@ export default class QuerymenSchema {
 
       query[bind] = _.merge(query[bind], param.parse())
     })
+
+    // console.log('3. parsed Query : ', query)
 
     return query
   }
@@ -383,5 +403,4 @@ export default class QuerymenSchema {
 
     return options || {}
   }
-
 }

@@ -77,8 +77,6 @@ export function validator (name, fn) {
 export function middleware (schema, options) {
   return function (req, res, next) {
     let _schema
-    // If option near is enable with make a simple clone
-    // In otherwise we make a _.cloneDeep
     if (schema && schema.options && schema.options.near) {
       _schema = schema instanceof Schema
         ? _.clone(schema)
@@ -95,8 +93,9 @@ export function middleware (schema, options) {
         res.status(400)
         return next(err.message)
       }
+      // console.log('1. request Query : ', req.query)
 
-      req.querymen = _schema.parse()
+      req.querymen = _schema.parse(req.query)
       req.querymen.schema = _schema
       next()
     })

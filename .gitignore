@@ -2,7 +2,6 @@
 logs
 *.log
 node_modules
-dist
 tmp
 coverage
 .nyc_output
