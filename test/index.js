@@ -112,10 +112,10 @@ test('Querymen middleware', (t) => {
     request(app)
       .get('/tests')
       .query({page: 50})
-      .expect(400)
+      .expect(200)
       .end((err, res) => {
         if (err) throw err
-        t.equal(res.body.param, 'page', 'should respond with error object')
+        t.equal(res.body.length, 4)
       })
 
     request(app)

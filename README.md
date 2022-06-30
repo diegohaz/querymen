@@ -18,7 +18,51 @@ npm install --save querymen
 ## Examples
 
 ### Pagination
-Querymen has a default schema to handle pagination. This is the most simple and common usage.
+Querymen has a default schema to handle pagination as shown below.
+
+```js
+{
+  page: {
+    type: Number,
+    default: 1,
+    max: Infinity,
+    min: 1,
+    bindTo: 'cursor',
+    parse: (value, path, operator, param) => {
+      return {skip: this.param('limit').value() * (value - 1)}
+    }
+  },
+  limit: {
+    type: Number,
+    default: 0,
+    max: Infinity,
+    min: 0,
+    bindTo: 'cursor',
+    parse: (value) => ({limit: value})
+  },
+  sort: {
+    type: [String],
+    default: '-createdAt',
+    bindTo: 'cursor',
+    parse: (value) => {
+      let fields = _.isArray(value) ? value : [value]
+      let sort = {}
+      fields.forEach((field) => {
+        if (field.charAt(0) === '-') {
+          sort[field.slice(1)] = -1
+        } else if (field.charAt(0) === '+') {
+          sort[field.slice(1)] = 1
+        } else {
+          sort[field] = 1
+        }
+      })
+      return {sort: sort}
+    }
+  }
+}
+```
+
+This is the most simple and common usage.
 ```js
 import { middleware as query } from 'querymen';
 
