@@ -23,6 +23,9 @@ export default class QuerymenParam extends Param {
         } else if (_.isRegExp(value)) {
           return operator === '$ne' ? {[path]: {$not: value}} : {[path]: value}
         } else {
+          if (_.includes(['$in', '$nin'], operator) && !_.isArray(value)) {
+            return {[path]: {[operator]: [value]}}
+          }
           return {[path]: {[operator]: value}}
         }
       }
