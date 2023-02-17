@@ -156,6 +156,8 @@ test('QuerymenParam parse', (t) => {
   t.same(parse(123, {operator: '$gt'}), {test: {$gt: 123}}, 'should parse $gt')
   t.same(parse(123, {operator: '$gte'}), {test: {$gte: 123}}, 'should parse $gte')
   t.same(parse(123, {operator: '$lt'}), {test: {$lt: 123}}, 'should parse $lt')
+  t.same(parse(123, {operator: '$in'}), {test: {$in: [123]}}, 'should parse $in value to array')
+  t.same(parse(123, {operator: '$nin'}), {test: {$nin: [123]}}, 'should parse $nin value to array')
   t.same(parse(123, {operator: '$lte'}), {test: {$lte: 123}}, 'should parse $lte')
   t.same(parse(/test/i, {operator: '$ne'}), {test: {$not: /test/i}}, 'should parse $not')
   t.same(parse(123, {parse: (value, path, operator) => ({[path]: operator})}), {test: '$eq'}, 'should parse option')
